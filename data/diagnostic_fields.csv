@@ -1,0 +1,30 @@
+id,field,scaling,confidence,note
+98-5D,Motor power,watts (direct),verified,event-pushed; OMITS ZEROS - do not integrate raw for energy
+98-5B,Rider power,watts (direct),verified,matches LDI field 5
+98-14,Rider torque,raw / 20 = Nm,verified_android,r=1.000 vs LDI field 7 (98-14 = 2x LDI-7)
+98-15,Motor torque,unconfirmed,candidate,correlates r=0.93 with motor power; RobbyPee's guess; needs bench anchor
+98-1D,unknown (low-resolution),unknown,candidate,small ints 1-62; weak r~0.5 motor-power corr; possibly motor current (A)
+80-9C,Delivered energy,Wh (direct monotonic),verified,ride Wh = last - first
+80-88,Battery SoC,%,verified,derived from 80-91
+98-5A,Cadence,raw / 2 = rpm,verified,boot-session only; else gate on LDI field 2
+98-08,Speed (2nd field),raw / 100 = km/h,verified,boot-session only; same speed as 98-2D
+98-2D,Speed (always present),raw / 100 = km/h,verified_android,integrates to odometer within 0.3%
+98-09,Assist level,0-4,verified,
+98-18,Odometer,metres,verified,matches LDI field 12
+80-E2,Wheel circumference,mm,verified,set in Flow
+98-0C,Assist mode names,n/a,debunked_android,absent on smart system; names arrive on 18-0D
+18-0D,Assist mode names (configured),string list,verified_android,index = 98-09 value (OFF/ECO/TOUR+/eMTB-shortcrank/eMTB+)
+98-4E,Assist mode IDs (configured slots),string list,verified_android,e.g. A100M00040 A100MSPIC7
+18-68,Assist mode catalog,id+name pairs,verified_android,ECO/ECO+/TOUR/TOUR+/SPORT/eMTB/eMTB+/TURBO/AUTO
+18-0E,Per-mode display colors,RGBA varint per mode,verified_android,same order as 18-0D (ECO #78BE20 TOUR+ #00A5D8 eMTB #9643ED TURBO #E20015)
+00-9B,Battery name,text,verified,"""PowerTube 750""; extended addressing C0 80 10 before 0A tag"
+98-74,Motor ratings,two varints (W),verified_android,250/600 on BDU3740; 600/600 on Android capture
+A1-86,Product string,text,verified_android,"""smart system eBike"""
+A1-81,Locale,text,verified_android,"e.g. ""en-GB"""
+80-8B,Temperature (candidate),temp-shaped; C ~ 0.35*raw - 139,candidate,divide-by-10 C debunked; needs a third IR anchor
+98-57,Per-mode range estimates,one byte/mode (km),verified_android,identical to LDI field 3; declines with SoC
+A2-43,Timer / uptime counter,n/a,debunked,NOT temperature
+80-91,Remaining battery energy,raw / 10 = Wh,verified_android,implied full capacity 724 Wh; battery-out vs 80-9C ~91%
+80-92,= 80-91 + 50 always,constant 5 Wh offset,verified_android,
+80-C5,exact duplicate of 80-91,n/a,verified_android,
+10-90..92,Per-mode tune parameters,support% / max torque / max power,candidate,40/85 Nm; 600 W

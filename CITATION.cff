@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+title: "Bosch Smart System — verified BLE field map"
+message: "If you use this work, please cite it as below."
+type: dataset
+authors:
+  - name: "redundo.app"
+    website: "https://redundo.app"
+abstract: >-
+  Ground-truth-verified reverse-engineering of the Bosch Smart System eBike
+  Bluetooth LE interface: the diagnostic telemetry channel (0x0011), the
+  official Live Data Interface (eb21), field scalings, frame format, the
+  stored-log transport, and capture method. Verified on a BDU3740 /
+  Performance Line CX.
+license: CC-BY-4.0
+year: 2026
+url: "https://redundo.app"
+keywords:
+  - bosch
+  - ebike
+  - smart-system
+  - bluetooth-le
+  - reverse-engineering
+  - telemetry

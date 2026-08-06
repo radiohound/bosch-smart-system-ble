@@ -1,0 +1,10 @@
+code,meaning,note
+20-62,type code,"battery e.g. ""EB1310000E"" - part/type code, not name (name is on 00-9B)"
+20-61,part number,
+20-65,component model,
+20-66,manufacture date,
+20-63,firmware version,
+20-64,firmware version,
+20-6B,firmware version,
+20-6E,firmware version,
+20-6F,accessory names,

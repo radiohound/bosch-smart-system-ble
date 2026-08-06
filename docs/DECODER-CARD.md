@@ -1,0 +1,292 @@
+# Decoder Card — reading the export log
+
+What each line of the exported `.jsonl` means, and the verified Bosch field map.
+Decode by **redundo.app**. Confidence markers: **✓** verified byte‑exact on a BDU3740 · **✓ᵃ**
+verified byte‑exact on the Android capture (smart system BDU3740 / Performance Line CX, fw 20.x) · **?**
+plausible but unconfirmed · **✗** debunked (was a guess, proven wrong).
+
+---
+
+## The log line
+
+One JSON object per line:
+
+```json
+{"t": 1785035528.746, "char": "00000011", "note": "eco climb", "raw": "30049809..."}
+```
+
+| key | meaning |
+|-----|---------|
+| `t` | epoch **seconds** (BLE‑notification arrival). The iPhone LDI corpus uses `t_wall` = epoch **milliseconds** instead |
+| `char` | which BLE characteristic it came from (full 8‑hex UUID) — **Android only**; the iPhone files are per‑channel so they omit it |
+| `raw` / `raw_hex` | hex of the whole notification (may pack several frames). Android + iPhone‑diag use `raw`; the iPhone LDI corpus uses `raw_hex` |
+| `note` | your session note |
+| `decoded` | (iPhone LDI corpus only) the app's own field decode, for reference |
+| `gps_speed_kmh` · `ctx` · `ok` | optional context — GPS speed (iPhone diag), correlation context + decode‑ok flag (iPhone LDI corpus) |
+
+### Channels (`char`)
+
+| char | what it is |
+|------|-----------|
+| `0011` | **diagnostic channel** — the `0x30` telemetry below (motor power, energy…) |
+| `2A63` | **reference power meter** (standard Cycling Power) — see CPS section |
+| `eb21` | **Bosch LDI** (officially documented protobuf) — see LDI section |
+
+> The `char` value in the log is the full 8-hex UUID prefix (`00000011`, `0000EB21`, `00002A63`);
+> `0011`/`eb21`/`2A63` below are shorthand. The `char` key is written by the **Android** app (all
+> channels → one file); iPhone Redundo writes a **separate file per channel** instead.
+>
+> **Full UUIDs** (confirmed against the Nilogax/SmartBridge decoder): the diagnostic channel is
+> `00000011-eaa2-11e9-81b4-2a2ae2dbcce4` and the LDI is service `eb20` / char
+> `0000eb21-eaa2-11e9-81b4-2a2ae2dbcce4` — **both share the same `…-eaa2-11e9-81b4-2a2ae2dbcce4`
+> vendor base**, so `0011` and `eb21` are two characteristics under Bosch's one BLE service tree.
+
+### File layouts (three export styles, one decoder)
+
+| file | keys | channel(s) |
+|------|------|-----------|
+| **Android** `bosch-android-<ms>.jsonl` | `t, char, note, raw` | all — `char` tags each line |
+| **iPhone diagnostic** `bosch-diag.jsonl` | `t, raw, note, gps_speed_kmh` | diagnostic `0x0011` only (no `char`) |
+| **iPhone LDI corpus** `bosch-<yyyymmdd>.jsonl` | `t_wall (ms), raw_hex, decoded, ok, ctx` | LDI `eb21` only |
+
+**Decoder — `decode_capture.py`.** Reads all three styles: it detects each line's channel (from the
+`char` tag or the `raw`/`raw_hex` shape), labels every field from the maps below, and prints a ride
+summary — motor peak/mean, delivered Wh, cadence‑gated efficiency, and decimal SoC (from `80‑91`,
+self‑calibrated pack capacity). Pass an iPhone **diagnostic and LDI file together** and it uses the
+LDI cadence (field 2) to gate the motor integral when the diagnostic channel's own cadence (`98‑5A`)
+wasn't captured — the boot‑session case below.
+
+```
+python3 decode_capture.py capture.jsonl [more.jsonl ...]   # labelled fields + ride summary
+python3 decode_capture.py --fields capture.jsonl           # every id, incl. unknowns
+python3 decode_capture.py --csv out.csv capture.jsonl      # per-sample merged CSV
+```
+
+## Frame types (first byte of `raw`)
+
+A notification can pack several frames. The first byte is the frame type:
+
+| type | meaning |
+|------|---------|
+| **`0x30`** | **component telemetry** — the fields you want (motor power etc.) |
+| `0x40` | additional telemetry frames (seen alongside `0x30`; not yet fully decoded) |
+| `0x10` | short periodic status |
+| `0x20` | session establishment / handshake |
+| `0x60` / `0x70` | stored‑log file transfer → the `.bin` set (index + per‑component logs) — **see "Stored‑log files" below** | 
+
+If a capture has only `0x10` and no `0x30`, it was on a **status‑only** connection (another
+device held the telemetry session) — no motor data in it.
+
+## Decoding a `0x30` telemetry frame
+
+```
+30 <len> <idHi> <idLo> 08 <varint>
+```
+
+- `<idHi><idLo>` = the message id (e.g. `98 5D`).
+- Payload is a one‑field protobuf: tag `08`, then a base‑128 **varint** = the value.
+- Text fields use tag `0A` + length + string instead of `08` + varint.
+- Split the notification on `0x30` boundaries first (each frame is `30 len …`, `len` bytes of body).
+
+### Verified field map
+
+| id | field | scaling | conf |
+|----|-------|---------|:---:|
+| `0x98-5D` | **Motor power** | watts (direct) | ✓ |
+| `0x98-5B` | **Rider power** | watts (direct) — matches LDI field 5 | ✓ |
+| `0x98-14` | **Rider torque** | raw **÷ 20** = Nm — cross‑checked against LDI field 7 at **r = 1.000** (98‑14 = exactly 2× LDI‑7) | ✓ᵃ |
+| `0x98-15` | **Motor torque** | correlates **r = 0.93** with motor power (best of any field); this is RobbyPee's `98‑15` guess. Scaling unconfirmed — his ÷200 gives implausibly low Nm; needs a bench anchor | ? |
+| `0x98-1D` | unknown, low‑resolution | small ints 1–62, weak (r≈0.5) motor‑power correlation; possibly motor current (A) | ? |
+| `0x80-9C` | **Delivered energy** | Wh (direct, monotonic; **ride Wh = last − first**) | ✓ |
+| `0x80-88` | Battery SoC | % | ✓ |
+| `0x98-5A` | Cadence | raw **÷ 2** = rpm. Present **only when the capture catches the bike's boot session** (see capture note); otherwise absent — gate on **LDI field 2** instead | ✓ |
+| `0x98-08` | Speed (2nd field) | raw **÷ 100** = km/h — same speed as `98-2D`, appears **alongside** it when the boot session is caught | ✓ |
+| `0x98-2D` | **Speed (always present)** | raw **÷ 100** = km/h — verified integrates to odometer within **0.3%** (−0.2% measured) | ✓ᵃ |
+| `0x98-09` | Assist level | 0–4 | ✓ |
+| `0x98-18` | Odometer | metres — matches LDI field 12 | ✓ |
+| `0x80-E2` | Wheel circumference | mm (set in Flow) | ✓ |
+| `0x98-0C` | Assist mode names | **absent on smart system** — names arrive on `18-0D` instead | ✗ᵃ |
+| `0x18-0D` | **Assist mode names** (configured) | string list, index = `98-09` value (e.g. OFF/ECO/TOUR+/eMTB‑shortcrank/eMTB+) | ✓ᵃ |
+| `0x98-4E` | Assist mode **IDs** (configured slots) | string list (e.g. A100M00040, A100MSPIC7…) | ✓ᵃ |
+| `0x18-68` | Assist mode **catalog** | all available modes, id + name pairs (ECO/ECO+/TOUR/TOUR+/SPORT/eMTB/eMTB+/TURBO/AUTO…) | ✓ᵃ |
+| `0x18-0E` | **Per‑mode display colors** | one RGBA varint per configured mode, same order as `18-0D` (OFF = transparent; e.g. ECO `#78BE20`, TOUR+ `#00A5D8`, eMTB `#9643ED`, TURBO‑red `#E20015` — the Kiox/LED‑Remote mode colors) | ✓ᵃ |
+| `0x00-9B` | **Battery name** | text ("PowerTube 750"); uses extended addressing `C0 80 10` before the `0A` tag | ✓ |
+| `0x98-74` | Motor ratings | two varints, W (250/600 on BDU3740; 600/600 on Android capture) | ✓ᵃ |
+| `0xA1-86` | Product string | text ("smart system eBike") | ✓ᵃ |
+| `0xA1-81` | Locale | text (e.g. "en-GB") | ✓ᵃ |
+| `0x80-8B` | Temperature? (**candidate**) | Monotonic, temperature‑*shaped*. **÷10 °C is debunked** (cold start: raw 480 = IR 85 °F, not 118 °F). A linear fit to two IR anchors — cold (480 = 85 °F) + FIT‑end (526 = 114 °F) — gives **°C ≈ 0.35·raw − 139** (°F ≈ 0.63·raw − 218), predicting capture‑end raw 546 ≈ 127 °F. But two points always fit a line, so this is *consistent with* temperature, not proof — needs a **third IR anchor** the line must predict before trusting | ? |
+| `0x98-57` | **Per‑mode range estimates** | one byte per configured mode, km (e.g. `27 1f 14 10` = 39/31/20/16 km); identical to LDI field 3; recomputes with riding style, declines with SoC | ✓ᵃ |
+| `0xA2-43` | Timer / uptime counter | **NOT temperature** | ✗ |
+| `0x80-91` | **Remaining battery energy** | ÷ 10 = Wh. `80-88` SoC is derived from it: implied full capacity constant at **724 Wh** across 15 checkpoints (78→66 %) and the 58 % capture. Battery‑out vs `80-9C` delivered ≈ 91 % | ✓ᵃ |
+| `0x80-92` | = `80-91` **+ 50, always** (constant 5 Wh offset) | — | ✓ᵃ |
+| `0x80-C5` | exact duplicate of `80-91` | — | ✓ᵃ |
+| `0x10-90…92` | Per‑mode tune parameters | support %, max torque (40/85 Nm), max power (600 W)… | ? |
+
+> **Capture note — catch the bike's power-on.** Which fields you get depends on **when you
+> subscribe**, not on hardware or firmware. Subscribe **at the bike's boot** (power-cycle the bike
+> with the app already connected) and you get the FULL set: both speed fields (`98-08` + `98-2D`),
+> cadence (`98-5A`), and the `0x60`/`0x70` stored-log transfer. Join an **already-running** bike and
+> you get only a reduced steady-state set — `98-2D` speed, motor, energy, temperature — with **no
+> `98-08`/`98-5A`**, for that whole power cycle. Confirmed on one BDU3740 (smart system fw 20.x): an
+> iPhone capture that caught the boot session saw all three (98-08 ×1377, 98-5A ×330, plus the file
+> transfer); an Android grab of the **same bike** one day later, joining mid-session, saw none of
+> them (0 in the raw — not a decode miss). When a mid-session capture lacks `98-5A`, cadence-gate on
+> **LDI field 2** instead.
+
+### Handshake inventory (`0x20`‑prefix frames)
+
+During session establishment the `0011` channel also answers with component info frames
+(body starts `20 xx C0 80 …`, text payload after tag `0A`): type code (`20-62`, e.g.
+"EB1310000E" — the battery's **part/type code**, not its name; the friendly name is on `00-9B`),
+part number (`20-61`), component model (`20-65`), manufacture date (`20-66`), firmware versions
+(`20-63/64/6B/6E`), and accessory names (`20-6F`). One block per component — the Android capture
+inventories: drive unit **BDU3740 "Performance Line CX"**, battery **BBP3775 "PowerTube 750"**,
+head unit **BHU3600 "Kiox 300"**, remote **BRC3600 "LED Remote"**, brand "Cannondale", and the
+region config "20mph_US-CA-NZ".
+
+### Stored‑log files (`0x60`/`0x70` transfer → the `.bin` set)
+
+When a capture **catches the bike's boot session** the `0x60`/`0x70` file transfer runs, and Redundo
+drops a set of `.bin` files **next to** the `.jsonl` capture (the "untitled folder" export is the
+worked example: `bosch-diag.jsonl` + `bosch-20260725.jsonl` + three `.bin`). They are the bike's
+on‑board flight recorder — the same logs a Bosch service tool downloads — as raw protobuf.
+
+**The index — `foldercontent.bin`.** A protobuf directory listing, one entry per stored file:
+
+```
+f1 { f1 { f1: "14342_1784930165.bin" }  f2: 34811 }   ← f1.f1.f1 = filename, f2 = size (bytes)
+f1 { f1 { f1: "14346_1784930164.bin" }  f2: 515   }
+```
+
+Filename = `<logId>_<epoch>.bin`; the epoch is the **dump time** (1784930165 = 2026‑07‑24 21:56 UTC),
+not the ride time. One `.bin` per component (`14342` = the BDU3740 drive unit, `14346` = the BRC3600
+LED Remote).
+
+**Each component log** = a repeated‑record protobuf: **record 0 is an identity header**, records
+1…N are a periodic telemetry time‑series.
+
+```
+record 0 (header): f1{ f1:<serial/uid>  f2:"20.27.0"(fw)  f3:"BDU3740"(model)
+                       f7:"27327-1710-42-300-00-0000"(part no)  f8:"20.9.0"(fw2) }
+record 1…1050:     f2{ f1:<monotonic counter>  f2{ f1,f2, f4{f1,f3} }  f3  f4  f5 }
+```
+
+The BDU3740 log holds **1050 telemetry records** in 34 KB. The header fields decode cleanly (they
+match the `0x20` handshake inventory); the per‑record `f1…f5` values are a **usage histogram / trip
+recorder and are not yet field‑mapped** — decoding them is the natural next project, and needs a log
+pulled right after a ride of known profile to anchor the counters.
+
+> ⚠️ **Motor power (`0x98-5D`) is event‑pushed and OMITS ZEROS** — the motor‑off state isn't
+> sent. **Do not integrate it raw** for energy (you'll exceed 100% efficiency). Get energy from
+> `0x80-9C`. If you need mechanical work, **cadence‑gate** the motor stream: treat motor = 0
+> whenever cadence = 0 (Bosch is pedal‑assist only), then integrate. Cadence source: `0x98-5A`
+> when the boot session was caught, otherwise **LDI field 2** (always available).
+
+## Bosch LDI (`char` = `eb21`)
+
+**Officially documented** by Bosch: *Live Data Interface* spec **V1.0** (May 2026), free,
+Apache‑2.0, no registration — bosch-ebike.com → Business → Live Data Interface. Requires
+smart system control‑unit firmware **v19+**.
+
+- Service `eb20`, characteristic `eb21`, UUID base `0000xxxx-eaa2-11e9-81b4-2a2ae2dbcce4`.
+- Pairing: LE Secure Connections with mandatory bonding (smartphone support out of scope).
+- A GATT **read** returns a full snapshot of all values (§2.2.3.2); **notifications** carry
+  changes and **may omit unchanged fields** — absence ≠ stale (§2.2.4.3).
+- Payload: one proto3 message, all documented fields varint.
+- **Read the proto straight from Bosch:** the official spec PDF embeds `ebike_live_data.proto`
+  (`package com.bosch.ebike; message LiveData`, Apache‑2.0). It defines **exactly** fields
+  1,2,5,9,10,11,12,17,21,22,23,24,25 — i.e. the 13 documented rows below and **nothing else**.
+  Our fields 3/7/8/13/14/16 are genuinely beyond the spec (undocumented, RE‑only).
+- v19 quirk (per spec §2.1.5.7): ATT_MTU **≥ 247** required, and the **accessory** must send the
+  `ATT_EXCHANGE_MTU_REQ` after connecting (the bike won't initiate). The accessory **must not**
+  cache value handles or the CCCD — it has to re‑discover the service/characteristic on every
+  connection. Pairing is advertised via a **Service Solicitation** for the `eb20` UUID.
+
+### Documented fields (spec V1.0)
+
+| # | field | scaling | conf |
+|---|-------|---------|:---:|
+| 1 | Speed | ÷ 100 = km/h — matches `98-2D` | ✓ᵃ |
+| 2 | Cadence | rpm (direct) | ✓ᵃ |
+| 5 | Rider power | W (direct) — byte‑exact match with `98-5B` | ✓ᵃ |
+| 9 | Ambient brightness | ÷ 1000 = lux | ✓ᵃ |
+| 10 | Battery SoC | % — matches `80-88` (78→66 over a ride) | ✓ᵃ |
+| 11 | Time | epoch seconds | ✓ᵃ |
+| 12 | Odometer | metres — matches `98-18` | ✓ᵃ |
+| 17 | Bike light | 0 = invalid · 1 = off · 2 = on | ✓ᵃ |
+| 21 | System locked | bool | ✓ᵃ |
+| 22 | Charger connected | bool | ✓ᵃ |
+| 23 | Light reserve mode | bool | ✓ᵃ |
+| 24 | Diagnosis active | bool | ✓ᵃ |
+| 25 | Standstill (bike not driving) | bool | ✓ᵃ |
+
+### Undocumented fields (observed on smart system, not in spec V1.0)
+
+| # | best guess | evidence | conf |
+|---|-----------|----------|:---:|
+| 8 | Assist level | 0–4, tracks `98-09` exactly | ✓ᵃ |
+| 7 | **Rider torque** | ÷ 10 = Nm; = power·60/(2π·cadence). Diagnostic `98‑14` is the same signal at ÷20 (r = 1.000) | ✓ᵃ |
+| 13 | **Trip average speed** | ÷ 100 = km/h; = odometer delta ÷ field 16 ride time, byte‑exact (2302 = 876 m / 137 s) | ✓ᵃ |
+| 14 | **Trip max speed** | ÷ 100 = km/h; running max of field 1, exact in 83/83 samples | ✓ᵃ |
+| 16 | **Trip ride time** | seconds; 1.000/s while moving, frozen while standstill (field 25) is set | ✓ᵃ |
+| 15 | Odometer snapshot at ride start | updates when standstill clears | ? |
+| 3 | **Per‑mode range estimates** (km) | = diag `98-57`, one byte per configured mode | ✓ᵃ |
+| 18 | Shift recommendation? | pulses 1→2 or 1→3 for a few seconds while riding (derailleur bike) | ? |
+| 19, 20, 27 | unknown / constants | — | — |
+
+## Reference power meter (`char` = `2A63`)
+
+Standard BLE Cycling Power Measurement:
+
+```
+flags (uint16 LE) · instantaneous power (sint16 LE, watts) · optional fields…
+```
+
+Power is bytes 2–3, little‑endian signed. Optional fields (pedal balance, torque, wheel/crank
+revs → cadence) follow per the flag bits. Logged into the **same file** as the Bosch frames, so
+Bosch rider power (`0x98-5B`) and the meter can be aligned by timestamp for calibration.
+
+> **First calibration result** (July 25 ride, 331 aligned samples): Bosch rider power
+> (`98-5B` / LDI field 5) averages **≈ 10 % below** the reference meter (186 W vs 205 W).
+> Timestamp jitter limits per‑sample correlation — treat as a preliminary offset, not a curve.
+
+## Cross‑check against public projects (July 2026)
+
+Compared our map with the open reverse‑engineering community. **No contradictions to our verified
+rows**; several independent confirmations and a few new leads.
+
+- **Nilogax/SmartBridge** (Android + XIAO nRF52840 → Garmin). Decodes the same `0011` channel and
+  agrees byte‑for‑byte: `98‑5B` rider W, `98‑5D` motor W, `98‑5A` cadence ÷2, `80‑88` SoC,
+  `98‑09` assist 0–4, `98‑18` odometer. It reads speed off **`98‑08`** (we use the always‑present
+  `98‑2D`); both are ÷100 and agree, consistent with our "two speed fields." Notable: it has **no
+  torque field** and gets **motor power only from `0011`** — because the official LDI has no motor
+  field — then encodes the rider/motor split as ANT+/BLE **left/right power balance** for the head
+  unit. It also force‑zeros speed after 7.5 s of a frozen odometer (the "ghost speed at standstill"
+  quirk that breaks Garmin auto‑pause).
+- **bestie‑org/BEStie** (phone‑free nRF52840, FTMS). Uses the **actual Bosch `.proto`** (nanopb) and
+  bundles the official spec PDF — that's the authoritative source that confirmed our 13 documented
+  LDI fields exactly, and confirmed there are no others in V1.0.
+- **RobbyPee/Bosch‑…‑Garmin‑Android** (`BLEdata.md`). Same `0x30` framing. First to flag **`98‑15`
+  as motor torque** (marked "possibly", ÷200) — we now confirm `98‑15` exists and tracks motor
+  power (r = 0.93), and additionally identified **`98‑14` = rider torque ÷20** which he didn't have.
+  ⚠️ **One disagreement:** he scales `98‑2D` speed **÷10** (from a single Strava match); our
+  whole‑ride integration to the odometer is byte‑exact at **÷100**, so we keep ÷100 (his single
+  sample was likely a low‑speed roll or coincidence).
+- **Xunil99/ha‑bosch‑ebike** (ESPHome LDI bridge). Implements only the 13 official LDI fields — so
+  it neither confirms nor refutes our undocumented 7/8/13/14/16; those remain **our** contribution
+  beyond every public decoder.
+- **"Nyon Unchained," arXiv 2404.12864.** Forensic teardown of the Nyon BUI350 head unit (not our
+  BLE path, but adjacent): RNDIS at `172.16.35.101:5001`, LUKS userdata whose key sits in a
+  cleartext partition, plaintext Wi‑Fi passwords, and — relevant here — on‑device SQLite logs a
+  **`driverTorque`** column, i.e. the hardware records torque even where the wire protocols hide it.
+  It also showed trips can be **forged** in the local DB and sync to Bosch's cloud unvalidated.
+
+**Net:** everything on the card held up; we added `98‑14` (rider torque, r=1.000) and `98‑15`
+(motor‑torque candidate), the full channel UUIDs, and the exact spec connection rules. The one
+outside claim we reject is RobbyPee's ÷10 speed on `98‑2D`.
+
+---
+
+*Field map + method: **redundo.app**. LDI: Bosch Live Data Interface spec V1.0 (May 2026, embedded
+`ebike_live_data.proto`). Cross‑checked against ha‑bosch‑ebike, Nilogax/SmartBridge, bestie‑org/BEStie,
+RobbyPee/Bosch‑Smart‑System‑Ebike‑Garmin‑Android, and arXiv 2404.12864.*

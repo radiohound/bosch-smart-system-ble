@@ -1,0 +1,7 @@
+first_byte,meaning,note
+0x30,component telemetry,the fields you want (motor power etc.)
+0x40,additional telemetry,seen alongside 0x30; not yet fully decoded
+0x10,short periodic status,status-only connection if no 0x30 present
+0x20,session establishment / handshake,component-info frames (see handshake)
+0x60,stored-log file transfer,.bin set (index + per-component logs)
+0x70,stored-log file transfer,.bin set (index + per-component logs)

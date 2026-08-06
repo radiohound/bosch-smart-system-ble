@@ -8,6 +8,10 @@ each field labelled with a confidence marker and the evidence behind it.
 
 **By [redundo.app](https://redundo.app).** © 2026 redundo.app. See [Credits](#credits).
 
+> 📖 **New here? Start with [`docs/FINDINGS.md`](docs/FINDINGS.md)** — the plain-English
+> walkthrough of what the system is and what we found. Then use [`docs/DECODER-CARD.md`](docs/DECODER-CARD.md)
+> as the exact field-by-field reference.
+
 > Verified on one bike, deeply: smart system **BDU3740 / Performance Line CX** (fw 20.x,
 > PowerTube 750), cross-checked against Bosch Flow, an independent reference power meter,
 > FIT ride logs, and Bosch's official LDI spec V1.0. Scope is deliberately honest — every
@@ -17,6 +21,7 @@ each field labelled with a confidence marker and the evidence behind it.
 
 | Path | Contents |
 |------|----------|
+| [`docs/FINDINGS.md`](docs/FINDINGS.md) | **Start here** — the plain-English walkthrough: what the system is, how it's framed, what the fields mean, the write channel, CX vs SX, and the capture method |
 | [`docs/DECODER-CARD.md`](docs/DECODER-CARD.md) | **The decoder card** — the full field map with confidence markers, frame format, the boot-session capture insight, stored-log format, LDI + reference-meter channels, and a cross-project comparison |
 | [`docs/CAPTURE-GUIDE.md`](docs/CAPTURE-GUIDE.md) | How to capture a ride with the Bosch Decoder Android app |
 | [`data/diagnostic_fields.csv`](data/diagnostic_fields.csv) | `0x30` telemetry field IDs, scalings, confidence (channel `0011`) |

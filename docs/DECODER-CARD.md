@@ -105,6 +105,7 @@ device held the telemetry session) — no motor data in it.
 | `0x98-09` | Assist level | 0–4 | ✓ |
 | `0x98-18` | Odometer | metres — matches LDI field 12 | ✓ |
 | `0x80-E2` | **Battery total capacity** | raw **÷ 100** = Ah (2113 → **21.1 Ah** on the PowerTube 750; Nik's SX reads 1143 → 11.4 Ah) — matches **`Battery.TOTAL_CAPACITY`** in the registry. **NOT wheel circumference** (the earlier guess): it never changes with the Flow wheel setting because it isn't wheel‑related | ✓ |
+| `0x98-29` | **Rear wheel circumference (user)** | raw **÷ 10** = mm — the Flow wheel setting itself (`0x98-28` = OEM default; `0x98-2F` = allowed limits). `DriveUnit.REAR_WHEEL_CIRCUMFERENCE_USER`. This is where wheel circumference actually lives (the earlier `80-E2` guess was battery capacity) | ✓ |
 | `0x98-0C` | Assist mode names | **absent on smart system** — names arrive on `18-0D` instead | ✗ᵃ |
 | `0x18-0D` | **Assist mode names** (configured) | string list, index = `98-09` value (e.g. OFF/ECO/TOUR+/eMTB‑shortcrank/eMTB+) | ✓ᵃ |
 | `0x98-4E` | Assist mode **IDs** (configured slots) | string list (e.g. A100M00040, A100MSPIC7…) | ✓ᵃ |

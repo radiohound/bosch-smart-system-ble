@@ -71,7 +71,11 @@ verified results:
   the LDI's own rider-power field exactly.
 - **Rider torque** (`98-14`) is raw ÷ 20 = N·m — confirmed because it comes out at exactly
   **2× the LDI torque field**, correlation r = 1.000.
-- **Cadence** (`98-5A`) is raw ÷ 2 = rpm.
+- **Cadence** (`98-5A`) is raw ÷ 2 = rpm on the diagnostic channel — but the *reliable* source
+  for cadence and rider torque is the **LDI** (`eb21` field 2 = cadence, field 7 = rider torque),
+  which streams them every ride regardless of boot timing.
+- **Wheel circumference** is the *setting itself*: `98-29` (`REAR_WHEEL_CIRCUMFERENCE_USER`) /
+  `98-28` (OEM default), raw ÷ 10 = mm — on the diagnostic channel.
 - **Speed** (`98-2D`, always present) is raw ÷ 100 = km/h — confirmed because integrating it
   over a whole ride reproduces the odometer to within 0.3%.
 - **Delivered energy** (`80-9C`) is watt-hours; a ride's consumption is just last − first.
@@ -80,10 +84,11 @@ verified results:
 - **Assist mode names, IDs, catalog, and colors** live on the `18-xx` family; the assist
   level itself is `98-09`.
 
-And the honest not-yet-proven ones: **motor torque** (`98-15`) clearly tracks motor power
-(r = 0.93) but its scaling isn't nailed down, and **`80-8B`** is temperature-*shaped* but its
-absolute scale is unproven — both are marked as candidates in the card, with the exact
-measurement needed to close them.
+The honest not-yet-proven one: **motor torque** (`98-15`) clearly tracks motor power (r = 0.93)
+but its scaling isn't nailed down — marked a candidate in the card, with the exact measurement
+needed to close it. (**`80-8B`** battery temperature, once a candidate, is now resolved as
+**`zigzag(raw)/10` = °C** — it matches Bosch Flow's `presentCellTemperature` and the registry,
+and reads the *internal* cell temperature, which is why surface-IR anchors never fit it.)
 
 > ⚠️ **One trap worth repeating:** motor power (`98-5D`) is event-pushed and *omits zeros* —
 > the "motor off" moments aren't sent. Don't integrate it raw for energy (you'll blow past
@@ -108,21 +113,61 @@ writes actually took effect. The long-standing assumption that the bike ignores 
 writes is false, and — notably — **no cryptographic handshake gates the write channel**; the
 "handshake blob" some sources describe is actually a cleartext config key.
 
+**And the write channel is also a *read* channel — this is how we display request-only fields.**
+Writing a one-field request — `30 05 40 80 <idHi> <idLo> 00` — makes the bike reply on `0x0011`
+with that field's value (or a "not available" status). That's what let us **map which of the
+~895 registry addresses are reachable over BLE** (161 answer with data) and **pull fields that
+never stream on their own**: the battery **FET** and drive-unit **PCB** temperatures
+(`80-D2` / `98-84`), the remote's internal battery voltage (`A1-C1`), the battery's
+max-discharge-current limit (`80-93`), and more. The request/response grammar and the full
+reachability map are in **[BLE-ACCESS.md](BLE-ACCESS.md)**.
+
 ## 5. Cross-generation: CX vs SX
 
-The fear that field IDs shift wholesale between generations turned out to be only partly true.
-The **transport and the core power/battery IDs are identical** across the Performance Line CX
-and SX. The real differences are narrow: the assist-mode config-key namespace differs
-(`A100M…` on CX vs `A100E…` on SX), and Bosch's Flow app doesn't even request torque/cadence
-on the SX we captured, so those didn't stream there. Treat that last point as an observed
-interface difference, not proof the SX hardware lacks them.
+Field IDs are widely feared to shift wholesale between drive-unit generations — a published
+report (RobbyPee issue #6: a BDU3741/CX and BDU3143/SX at FW 17.16.0) claims *none* of the
+documented IDs matched. Our one cross-generation data point — a Performance Line **SX**
+contributed by Nik, alongside our **CX** (BDU3740) — says the truth is narrower: **the core is
+stable, the differences are specific.**
+
+**What's identical CX ↔ SX:**
+
+- **Transport and the core power/battery IDs.** `98-5D` motor power and `98-5B` rider power
+  carry live varying watts with the same meaning; the battery block matches too — `80-9C`
+  delivered Wh, `80-91` SoC, `80-8B` temperature, the `80-92`/`80-C5` pair. This directly
+  refutes the "everything shifts" fear for the fields that matter.
+- **Cadence ÷2 and the write/command grammar** (subscribe / stop / rate / config frames) are
+  byte-for-byte the same, including the assist-mode config-write mechanism.
+
+**What differs:**
+
+| aspect | CX (our BDU3740) | SX (Nik's) |
+|--------|------------------|------------|
+| Assist-mode config-key namespace | `A100M…` (+ `S100RUCZ20`) | `A100E…` |
+| Battery total capacity (`80-E2`) | 2113 → **21.1 Ah** (PowerTube 750) | 1143 → **11.4 Ah** (smaller pack) |
+| Component / firmware (Device Info `0x180A`) | head **BHU3600** / remote **BRC3600**, SW **20.27.0** | System Controller **BRC3100**, SW **20.9.0**, HW 4.1.3 |
+| Torque/cadence on the `0x0011` diagnostic channel | first-class, physics-verified | Flow doesn't request them, so they don't stream — see caveat |
+
+**Two honest caveats on those differences:**
+
+- The SX torque/cadence gap is **"Flow doesn't ask," not "the SX lacks them."** A passive Flow
+  capture can't distinguish a hardware absence from an app-config choice, it's **N = 1 SX**, and
+  the **LDI carries cadence and rider torque regardless** (fields 2 and 7). Don't read it as an
+  SX limitation.
+- An earlier claim of a CX/SX **speed-scaling split** (÷100 vs ÷10) is **retracted** — it came
+  from an unknown-hardware example, not a verified SX. Our CX is ÷100, cross-confirmed by the LDI.
+
+**Bottom line:** re-verify on your own drive unit rather than inheriting a table — but expect the
+power/battery core to hold, with the real differences in **configuration, capacity, and firmware**
+rather than the physics IDs.
 
 ## 6. What this does *not* show (honest limits)
 
 - The `0x0011` stream is the drive unit's **output**, not a two-sided mirror — we never see the
   head unit *requesting* a field, because those requests run on the internal wired bus, off-BLE.
-- So "torque/cadence unreachable over BLE" *leans* true but isn't fully proven.
-- Wheel-circumference changes weren't located in any BLE capture; their transport is unresolved.
+- This is **one bike, deeply** — a CX (BDU3740) — with a second-generation cross-check (SX; see
+  §5). The BLE-reachability split (which addresses answer vs refuse) and some scalings may differ
+  on other drive units or firmware; cross-bike captures are welcome.
 
 ## 7. Method — the capture that made it possible
 

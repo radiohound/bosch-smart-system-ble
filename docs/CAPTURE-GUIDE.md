@@ -25,6 +25,17 @@ The bike only talks to a **bonded** phone. The reliable way to bond is to **pair
 in the Bosch Flow app** on this phone (turn the bike on, add it in Flow). That establishes the
 OS‑level bond this decoder reuses. You only do this once.
 
+> ⚠️ **Bond via Flow — do NOT try to make the phone an LDI *peer*.** The method above (bond in
+> Flow, then connect as a **central** and reuse that OS bond) is safe. A *different* approach —
+> making the phone advertise as an **LDI peripheral** so the bike connects *to it* (the
+> peer/bridge path) — can **permanently burn the bond** on current gen4 firmware (CX and SX,
+> post‑May FW): the bike bonds once, then **never reconnects to that phone again, and the bond
+> can't be cleared** (removing the accessory in Flow doesn't help). Cause: the bike resolves a
+> phone's rotating BLE MAC while *scanning* but won't use the IRK to *initiate* a connection;
+> dedicated LDI computers sidestep it with a static random MAC. **This does not affect the
+> central/diagnostic method in this guide** — but don't attempt the peer path on a bike you care
+> about. (Reported on r/BoschSmartSystem by u/InvestigatorSenior.)
+
 ## 3. Capture a ride
 
 > **One capturing device per bike.** The bike hands its telemetry to a *single* phone. If another

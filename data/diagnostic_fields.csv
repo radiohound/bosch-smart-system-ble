@@ -12,6 +12,7 @@ id,field,scaling,confidence,note
 98-09,Assist level,0-4,verified,
 98-18,Odometer,metres,verified,matches LDI field 12
 80-E2,Battery total capacity,raw / 100 = Ah,verified,Battery.TOTAL_CAPACITY per registry; 2113->21.1Ah (750 pack) / 1143->11.4Ah (Nik SX); NOT wheel circ - unchanged across Flow wheel setting
+98-29,Rear wheel circumference (user),raw / 10 = mm,verified,DriveUnit.REAR_WHEEL_CIRCUMFERENCE_USER; the Flow wheel setting itself; 98-28 = OEM default; this is where wheel circ actually lives (80-E2 was battery capacity)
 98-0C,Assist mode names,n/a,debunked_android,absent on smart system; names arrive on 18-0D
 18-0D,Assist mode names (configured),string list,verified_android,index = 98-09 value (OFF/ECO/TOUR+/eMTB-shortcrank/eMTB+)
 98-4E,Assist mode IDs (configured slots),string list,verified_android,e.g. A100M00040 A100MSPIC7

@@ -3,7 +3,7 @@ id,field,scaling,confidence,note
 98-5B,Rider power,watts (direct),verified,matches LDI field 5
 98-14,Rider torque,raw / 20 = Nm,verified_android,r=1.000 vs LDI field 7 (98-14 = 2x LDI-7)
 98-15,Motor torque,unconfirmed,candidate,correlates r=0.93 with motor power; RobbyPee's guess; needs bench anchor
-98-1D,unknown (low-resolution),unknown,candidate,small ints 1-62; weak r~0.5 motor-power corr; possibly motor current (A)
+98-1D,Road slope,raw (gradient),candidate,DriveUnit.ROAD_SLOPE per bes3-reader registry; small ints 1-62; weak motor-power corr fits gradient not current
 80-9C,Delivered energy,Wh (direct monotonic),verified,ride Wh = last - first
 80-88,Battery SoC,%,verified,derived from 80-91
 98-5A,Cadence,raw / 2 = rpm,verified,boot-session only; else gate on LDI field 2
@@ -11,7 +11,7 @@ id,field,scaling,confidence,note
 98-2D,Speed (always present),raw / 100 = km/h,verified_android,integrates to odometer within 0.3%
 98-09,Assist level,0-4,verified,
 98-18,Odometer,metres,verified,matches LDI field 12
-80-E2,Wheel circumference,mm,verified,set in Flow
+80-E2,Battery total capacity,raw / 100 = Ah,verified,Battery.TOTAL_CAPACITY per registry; 2113->21.1Ah (750 pack) / 1143->11.4Ah (Nik SX); NOT wheel circ - unchanged across Flow wheel setting
 98-0C,Assist mode names,n/a,debunked_android,absent on smart system; names arrive on 18-0D
 18-0D,Assist mode names (configured),string list,verified_android,index = 98-09 value (OFF/ECO/TOUR+/eMTB-shortcrank/eMTB+)
 98-4E,Assist mode IDs (configured slots),string list,verified_android,e.g. A100M00040 A100MSPIC7
@@ -21,7 +21,11 @@ id,field,scaling,confidence,note
 98-74,Motor ratings,two varints (W),verified_android,250/600 on BDU3740; 600/600 on Android capture
 A1-86,Product string,text,verified_android,"""smart system eBike"""
 A1-81,Locale,text,verified_android,"e.g. ""en-GB"""
-80-8B,Temperature (candidate),temp-shaped; C ~ 0.35*raw - 139,candidate,divide-by-10 C debunked; needs a third IR anchor
+80-8B,Battery pack temperature,zigzag(raw)/10 = C,verified,plain raw/10 reads 2x high (zigzag first); matches Flow presentCellTemperature + registry signed-div10; charge test 22.5->28.6C; internal cell temp so surface-IR fit (0.35*raw-139) superseded
+80-D2,Battery FET temperature,zigzag(raw)/10 = C (registry),candidate,request-only (not passive); ~28-35C plausible; Battery.PRESENT_FET_TEMPERATURE
+98-84,Drive-unit PCB temperature,zigzag(raw)/10 = C (registry),candidate,request-only; ~23-27C warmer under load; DriveUnit.PRESENT_PCB_TEMPERATURE
+A1-C1,Remote internal battery voltage,raw / 1000 = V,candidate,~4.185V; remote's own cell NOT traction pack; only voltage readable over BLE; RemoteControl.INTERNAL_BATTERY_VOLTAGE
+80-93,Max allowed discharge current,raw / 1000 = A (mA),verified_android,60000->60.0A protection ceiling; live current 80-94 is USB-only refused over BLE; Battery.MAXIMUM_ALLOWED_DISCHARGE_CURRENT
 98-57,Per-mode range estimates,one byte/mode (km),verified_android,identical to LDI field 3; declines with SoC
 A2-43,Timer / uptime counter,n/a,debunked,NOT temperature
 80-91,Remaining battery energy,raw / 10 = Wh,verified_android,implied full capacity 724 Wh; battery-out vs 80-9C ~91%

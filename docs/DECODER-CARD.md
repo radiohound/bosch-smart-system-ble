@@ -96,7 +96,7 @@ device held the telemetry session) — no motor data in it.
 | `0x98-5B` | **Rider power** | watts (direct) — matches LDI field 5 | ✓ |
 | `0x98-14` | **Rider torque** | raw **÷ 20** = Nm — cross‑checked against LDI field 7 at **r = 1.000** (98‑14 = exactly 2× LDI‑7) | ✓ᵃ |
 | `0x98-15` | **Motor torque** | correlates **r = 0.93** with motor power (best of any field); this is RobbyPee's `98‑15` guess. Scaling unconfirmed — his ÷200 gives implausibly low Nm; needs a bench anchor | ? |
-| `0x98-1D` | unknown, low‑resolution | small ints 1–62, weak (r≈0.5) motor‑power correlation; possibly motor current (A) | ? |
+| `0x98-1D` | **Road slope** | small ints 1–62, weak (r≈0.5) motor‑power correlation — which fits **gradient** (steeper → more assist), not the earlier "motor current" guess. Matches **`DriveUnit.ROAD_SLOPE`** in the bes3‑reader registry; exact scaling not yet pinned | ? |
 | `0x80-9C` | **Delivered energy** | Wh (direct, monotonic; **ride Wh = last − first**) | ✓ |
 | `0x80-88` | Battery SoC | % | ✓ |
 | `0x98-5A` | Cadence | raw **÷ 2** = rpm. Present **only when the capture catches the bike's boot session** (see capture note); otherwise absent — gate on **LDI field 2** instead | ✓ |
@@ -104,7 +104,7 @@ device held the telemetry session) — no motor data in it.
 | `0x98-2D` | **Speed (always present)** | raw **÷ 100** = km/h — verified integrates to odometer within **0.3%** (−0.2% measured) | ✓ᵃ |
 | `0x98-09` | Assist level | 0–4 | ✓ |
 | `0x98-18` | Odometer | metres — matches LDI field 12 | ✓ |
-| `0x80-E2` | Wheel circumference | mm (set in Flow) | ✓ |
+| `0x80-E2` | **Battery total capacity** | raw **÷ 100** = Ah (2113 → **21.1 Ah** on the PowerTube 750; Nik's SX reads 1143 → 11.4 Ah) — matches **`Battery.TOTAL_CAPACITY`** in the registry. **NOT wheel circumference** (the earlier guess): it never changes with the Flow wheel setting because it isn't wheel‑related | ✓ |
 | `0x98-0C` | Assist mode names | **absent on smart system** — names arrive on `18-0D` instead | ✗ᵃ |
 | `0x18-0D` | **Assist mode names** (configured) | string list, index = `98-09` value (e.g. OFF/ECO/TOUR+/eMTB‑shortcrank/eMTB+) | ✓ᵃ |
 | `0x98-4E` | Assist mode **IDs** (configured slots) | string list (e.g. A100M00040, A100MSPIC7…) | ✓ᵃ |
@@ -114,7 +114,11 @@ device held the telemetry session) — no motor data in it.
 | `0x98-74` | Motor ratings | two varints, W (250/600 on BDU3740; 600/600 on Android capture) | ✓ᵃ |
 | `0xA1-86` | Product string | text ("smart system eBike") | ✓ᵃ |
 | `0xA1-81` | Locale | text (e.g. "en-GB") | ✓ᵃ |
-| `0x80-8B` | Temperature? (**candidate**) | Monotonic, temperature‑*shaped*. **÷10 °C is debunked** (cold start: raw 480 = IR 85 °F, not 118 °F). A linear fit to two IR anchors — cold (480 = 85 °F) + FIT‑end (526 = 114 °F) — gives **°C ≈ 0.35·raw − 139** (°F ≈ 0.63·raw − 218), predicting capture‑end raw 546 ≈ 127 °F. But two points always fit a line, so this is *consistent with* temperature, not proof — needs a **third IR anchor** the line must predict before trusting | ? |
+| `0x80-8B` | **Battery pack temperature** | **°C = zigzag(raw)/10** (raw is a plain varint; a bare raw/10 reads ~2× high — zigzag‑decode first, `zigzag(n) = (n>>1) ^ -(n&1)`). Matches Bosch Flow's `presentCellTemperature` and the registry (`Battery.PRESENT_PACK_TEMPERATURE`, signed ÷10); a 60‑min charge test tracks a textbook 22.5 → 28.6 °C warm‑up. This is the **internal cell** temp, so **surface IR anchors don't apply** — the earlier surface‑IR linear fit (°C ≈ 0.35·raw − 139) is superseded for that reason | ✓ |
+| `0x80-D2` | **Battery FET temperature** | **request‑only** (not passively streamed) — reads a plausible ~28–35 °C at `zigzag(raw)/10` (the registry's signed‑÷10). `Battery.PRESENT_FET_TEMPERATURE` | ? |
+| `0x98-84` | **Drive‑unit PCB temperature** | **request‑only** — reads ~23–27 °C at `zigzag(raw)/10`, warmer under load. `DriveUnit.PRESENT_PCB_TEMPERATURE` | ? |
+| `0xA1-C1` | **Remote internal battery** voltage | ~**4.185 V** (÷1000) — the remote/head‑unit's *own* cell, **not** the traction pack. `RemoteControl.INTERNAL_BATTERY_VOLTAGE`. The **only voltage readable over BLE** (pack voltage `80-8C` is USB‑only) | ? |
+| `0x80-93` | **Max allowed discharge current** | raw is **milliamps** → **÷ 1000** = A: 60000 → **60.0 A** — a protection ceiling (a 600 W peak pulls only ~17 A). `Battery.MAXIMUM_ALLOWED_DISCHARGE_CURRENT`. Live current `80-94` is **USB‑only, refused over BLE even under load** | ✓ᵃ |
 | `0x98-57` | **Per‑mode range estimates** | one byte per configured mode, km (e.g. `27 1f 14 10` = 39/31/20/16 km); identical to LDI field 3; recomputes with riding style, declines with SoC | ✓ᵃ |
 | `0xA2-43` | Timer / uptime counter | **NOT temperature** | ✗ |
 | `0x80-91` | **Remaining battery energy** | ÷ 10 = Wh. `80-88` SoC is derived from it: implied full capacity constant at **724 Wh** across 15 checkpoints (78→66 %) and the 58 % capture. Battery‑out vs `80-9C` delivered ≈ 91 % | ✓ᵃ |

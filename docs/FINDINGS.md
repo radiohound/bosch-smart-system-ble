@@ -36,10 +36,14 @@ voltage, live discharge current — stay USB-only, even under load). So: his reg
 This write-up is mostly about that second, undocumented **BLE** channel — what its data means, and
 how we proved each field rather than guessing.
 
-Scope is deliberately honest: **one bike, deeply verified** — a Performance Line CX (BDU3740,
-PowerTube 750, fw 20.x) — cross-checked against Bosch's own Flow app, an independent reference
-power meter, FIT ride logs, and (for the LDI) Bosch's official spec. It is "one model, deeply,"
-never "the whole Bosch protocol."
+Scope is deliberately honest: **one bike, deeply verified** — a **smart system (gen 4) Performance
+Line CX** (BDU3740, PowerTube 750, fw 20.x) — cross-checked against Bosch's own Flow app, an
+independent reference power meter, FIT ride logs, and (for the LDI) Bosch's official spec. We've
+also done **preliminary testing on a second bike — a Performance Line SX** (also smart system
+gen 4, ~400 Wh pack, contributed by Nik): enough to confirm the core power/battery IDs and the
+write grammar carry across, and to map the narrow generational differences (see §5), but not the
+deep per-field verification the CX has. So it is "one model deeply, a second previewed," never
+"the whole Bosch protocol."
 
 ## 1. How the data is framed
 

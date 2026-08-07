@@ -12,10 +12,12 @@ each field labelled with a confidence marker and the evidence behind it.
 > walkthrough of what the system is and what we found. Then use [`docs/DECODER-CARD.md`](docs/DECODER-CARD.md)
 > as the exact field-by-field reference.
 
-> Verified on one bike, deeply: smart system **BDU3740 / Performance Line CX** (fw 20.x,
-> PowerTube 750), cross-checked against Bosch Flow, an independent reference power meter,
-> FIT ride logs, and Bosch's official LDI spec V1.0. Scope is deliberately honest — every
-> row carries a confidence marker, and unproven guesses are labelled as such.
+> Verified on one bike, deeply: a **smart system (gen 4) Performance Line CX** — BDU3740,
+> PowerTube 750, fw 20.x — cross-checked against Bosch Flow, an independent reference power
+> meter, FIT ride logs, and Bosch's official LDI spec V1.0; plus **preliminary testing on a
+> second bike (Performance Line SX, also gen 4)** that confirms the core carries across (see the
+> CX-vs-SX section). Scope is deliberately honest — every row carries a confidence marker, and
+> unproven guesses are labelled as such.
 
 ## What's here
 

@@ -21,3 +21,15 @@ keywords:
   - bluetooth-le
   - reverse-engineering
   - telemetry
+references:
+  - type: software
+    title: "bosch-bes3-reader — Bosch BES3 USB diagnostic address registry"
+    authors:
+      - family-names: Weijnen
+        given-names: Remko
+    url: "https://github.com/rweijnen/bosch-bes3-reader"
+    license: CC-BY-4.0
+    notes: >-
+      Reverse-engineered ~895-address BES3 registry read over USB-C. Used as the
+      canonical field-name/address reference that this project's BLE-reachability
+      results are keyed to.

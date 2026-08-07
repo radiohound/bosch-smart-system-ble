@@ -33,6 +33,13 @@ each field labelled with a confidence marker and the evidence behind it.
 
 ## TL;DR
 
+- **Three ways in — this map is the BLE diagnostic one.** The deep component data has two
+  transports: **USB-C** to the drive unit — Remko Weijnen's
+  [`bes3-reader`](https://github.com/rweijnen/bosch-bes3-reader) documents all ~895 addresses
+  that way — and the **BLE diagnostic channel** `0x0011`, the focus here. Bosch's official
+  **LDI** `eb21` is the third (telemetry only). Our contribution is the BLE half: of Remko's
+  ~895 addresses, **which you can actually reach over Bluetooth, and how** (161 answer, ~481
+  refuse — the rest is USB-only).
 - **Two BLE surfaces, one vendor tree.** Both live under Bosch's base
   `0000xxxx-eaa2-11e9-81b4-2a2ae2dbcce4`: the **diagnostic channel** `0x0011` (the rich
   `0x30` telemetry) and the officially documented **LDI** `eb21`.
@@ -66,8 +73,14 @@ data are **CC BY 4.0** (free to use and build on, attribution required).
 
 Field map, method, and tooling by **[redundo.app](https://redundo.app)**, with thanks to:
 
-- **Nik Leiser** — the HCI-snoop capture method and the Performance Line SX captures that
-  opened the write/command channel and enabled the first cross-generation comparison.
+- **Remko Weijnen — [`bes3-reader`](https://github.com/rweijnen/bosch-bes3-reader)** — the
+  parallel **USB-C** diagnostic project and its ~895-address BES3 registry (CC BY 4.0). Where
+  this repo maps the BLE surface, his maps the USB one; we cross-reference field names to his
+  registry and report which of his addresses are BLE-reachable.
+- **Nik Leiser**, of the **[BikeBridge](https://codeberg.org/bg443/BikeBridge)** project (an
+  open-source Android app for live BLE e-bike telemetry + commands) — contributed the HCI-snoop
+  capture method and the Performance Line SX captures that opened the write/command channel and
+  enabled the first cross-generation comparison.
 - The earlier **community reverse-engineering posters** whose initial field notes gave this
   work its starting point.
 - Cross-project confirmations from **Nilogax/SmartBridge**, **bestie-org/BEStie**,

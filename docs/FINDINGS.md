@@ -23,7 +23,17 @@ vendor service tree (base `…-eaa2-11e9-81b4-2a2ae2dbcce4`):
 2. **An undocumented diagnostic channel** — characteristic `0x0011`. This is the rich one,
    carrying motor power, torque, energy, assist-mode config, and much more.
 
-This write-up is mostly about that second, undocumented channel — what its data means, and
+There's also a **third way into the same diagnostic data that isn't Bluetooth at all**: a
+**USB-C** connection to the drive unit's controller. Remko Weijnen's
+[`bes3-reader`](https://github.com/rweijnen/bosch-bes3-reader) reverse-engineered that path and
+published the full ~895-address BES3 registry (CC BY 4.0). The USB transport exposes *nearly
+everything*; the BLE diagnostic channel exposes only a **subset** — and a large part of what
+this write-up adds is exactly *which* subset. We keyed our tests to his registry and found that
+of ~895 addresses, **161 answer over BLE and ~481 refuse** (the electrical internals — pack
+voltage, live discharge current — stay USB-only, even under load). So: his registry is the
+"what exists" map over USB; this repo is the "what you can reach over Bluetooth, and how" map.
+
+This write-up is mostly about that second, undocumented **BLE** channel — what its data means, and
 how we proved each field rather than guessing.
 
 Scope is deliberately honest: **one bike, deeply verified** — a Performance Line CX (BDU3740,

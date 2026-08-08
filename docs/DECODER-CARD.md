@@ -12,55 +12,14 @@ plausible but unconfirmed · **◐** read over BLE, scaling not yet verified · 
 
 ---
 
-## Capture format
+## BLE frame format
 
-A capture is **JSONL** — one BLE notification per line:
-
-```json
-{"t": 1785035528.746, "char": "00000011", "note": "eco climb", "raw": "30049809..."}
-```
-
-| key | meaning |
-|-----|---------|
-| `t` | epoch **seconds** (BLE‑notification arrival). The iPhone LDI corpus uses `t_wall` = epoch **milliseconds** instead |
-| `char` | which BLE characteristic it came from (full 8‑hex UUID) — **Android only**; the iPhone files are per‑channel so they omit it |
-| `raw` / `raw_hex` | hex of the whole notification (may pack several frames). Android + iPhone‑diag use `raw`; the iPhone LDI corpus uses `raw_hex` |
-| `note` | your session note |
-| `decoded` | (iPhone LDI corpus only) the app's own field decode, for reference |
-| `gps_speed_kmh` · `ctx` · `ok` | optional context — GPS speed (iPhone diag), correlation context + decode‑ok flag (iPhone LDI corpus) |
-
-### Channels (`char`)
-
-| char | what it is |
-|------|-----------|
-| `0011` | **diagnostic channel** — the `0x30` telemetry below (motor power, energy…) |
-| `2A63` | **reference power meter** (standard Cycling Power) — see CPS section |
-| `eb21` | **Bosch LDI** (officially documented protobuf) — see LDI section |
-
-> The `char` value in the log is the full 8-hex UUID prefix (`00000011`, `0000EB21`, `00002A63`);
-> `0011`/`eb21`/`2A63` below are shorthand. The `char` key is written by the **Android** app (all
-> channels → one file); iPhone Redundo writes a **separate file per channel** instead.
->
-> **Full UUIDs** (confirmed against the Nilogax/SmartBridge decoder): the diagnostic channel is
-> `00000011-eaa2-11e9-81b4-2a2ae2dbcce4` and the LDI is service `eb20` / char
-> `0000eb21-eaa2-11e9-81b4-2a2ae2dbcce4` — **both share the same `…-eaa2-11e9-81b4-2a2ae2dbcce4`
-> vendor base**, so `0011` and `eb21` are two characteristics under Bosch's one BLE service tree.
-
-### File layouts (three export styles)
-
-| file | keys | channel(s) |
-|------|------|-----------|
-| **Android** `bosch-android-<ms>.jsonl` | `t, char, note, raw` | all — `char` tags each line |
-| **iPhone diagnostic** `bosch-diag.jsonl` | `t, raw, note, gps_speed_kmh` | diagnostic `0x0011` only (no `char`) |
-| **iPhone LDI corpus** `bosch-<yyyymmdd>.jsonl` | `t_wall (ms), raw_hex, decoded, ok, ctx` | LDI `eb21` only |
-
-Each style is plain JSONL — one notification per line — so any parser can read the `raw`/`raw_hex`
-hex against the field maps below. To gate motor energy on cadence when the diagnostic channel's own
-cadence (`98‑5A`) wasn't in the capture (the boot‑session case below), fall back to **LDI field 2**.
-
-## Frame types (first byte of `raw`)
-
-A notification can pack several frames. The first byte is the frame type:
+This is the device-intrinsic layer — what the Bosch Smart System actually puts on the wire,
+decodable from **any** capture (nRF Connect, an Android HCI-snoop log, Wireshark, your own app), no
+particular tool required. A single BLE notification packs several length-prefixed frames; the first
+byte of each is its type. *(If you're reading a `.jsonl` file exported by redundo's own tools, that
+container layout is documented in [Reading a redundo capture](#reading-a-redundo-capture-jsonl-container)
+at the end — it's optional; the maps below decode the wire directly.)*
 
 | type | meaning |
 |------|---------|
@@ -68,21 +27,36 @@ A notification can pack several frames. The first byte is the frame type:
 | `0x40` | additional telemetry frames (seen alongside `0x30`; not yet fully decoded) |
 | `0x10` | short periodic status |
 | `0x20` | session establishment / handshake |
-| `0x60` / `0x70` | stored‑log file transfer → the `.bin` set (index + per‑component logs) — **see "Stored‑log files" below** | 
+| `0x60` / `0x70` | stored-log file transfer → the `.bin` set (index + per-component logs) — **see "Stored-log files" below** |
 
-If a capture has only `0x10` and no `0x30`, it was on a **status‑only** connection (another
+If a capture has only `0x10` and no `0x30`, it was on a **status-only** connection (another
 device held the telemetry session) — no motor data in it.
 
-## Decoding a `0x30` telemetry frame
+**Decoding a `0x30` telemetry frame:**
 
 ```
 30 <len> <idHi> <idLo> 08 <varint>
 ```
 
 - `<idHi><idLo>` = the message id (e.g. `98 5D`).
-- Payload is a one‑field protobuf: tag `08`, then a base‑128 **varint** = the value.
+- Payload is a one-field protobuf: tag `08`, then a base-128 **varint** = the value.
 - Text fields use tag `0A` + length + string instead of `08` + varint.
 - Split the notification on `0x30` boundaries first (each frame is `30 len …`, `len` bytes of body).
+
+### Channels
+
+Telemetry arrives on three BLE characteristics, all under Bosch's one vendor service tree:
+
+| char | what it is |
+|------|-----------|
+| `0011` | **diagnostic channel** — the `0x30` telemetry (motor power, energy…) |
+| `2A63` | **reference power meter** (standard Cycling Power) — see CPS section |
+| `eb21` | **Bosch LDI** (officially documented protobuf) — see LDI section |
+
+> **Full UUIDs** (confirmed against the Nilogax/SmartBridge decoder): the diagnostic channel is
+> `00000011-eaa2-11e9-81b4-2a2ae2dbcce4` and the LDI is service `eb20` / char
+> `0000eb21-eaa2-11e9-81b4-2a2ae2dbcce4` — **both share the same `…-eaa2-11e9-81b4-2a2ae2dbcce4`
+> vendor base**, so `0011` and `eb21` are two characteristics under Bosch's one BLE service tree.
 
 ### Verified field map
 
@@ -483,6 +457,40 @@ rows**; several independent confirmations and a few new leads.
 **Net:** everything on the card held up; we added `98‑14` (rider torque, r=1.000) and `98‑15`
 (motor‑torque candidate), the full channel UUIDs, and the exact spec connection rules. The one
 outside claim we reject is RobbyPee's ÷10 speed on `98‑2D`.
+
+## Reading a redundo capture (`.jsonl` container)
+
+The frame format and field maps above decode the BLE wire directly, so they work on any capture.
+This section documents one particular *container* — the **`.jsonl` files redundo's own capture tools
+export**, which the example/shared captures referenced here use. It is redundo's format, not a Bosch
+one; skip it if you capture your own way.
+
+One BLE notification per line:
+
+```json
+{"t": 1785035528.746, "char": "00000011", "note": "eco climb", "raw": "30049809..."}
+```
+
+| key | meaning |
+|-----|---------|
+| `t` | epoch **seconds** (BLE-notification arrival). The iPhone LDI corpus uses `t_wall` = epoch **milliseconds** instead |
+| `char` | which BLE characteristic it came from (full 8-hex UUID; shorthand `0011`/`eb21`/`2A63`) — **Android only**; the iPhone files are per-channel so they omit it |
+| `raw` / `raw_hex` | hex of the whole notification (may pack several frames). Android + iPhone-diag use `raw`; the iPhone LDI corpus uses `raw_hex` |
+| `note` | your session note |
+| `decoded` | (iPhone LDI corpus only) the app's own field decode, for reference |
+| `gps_speed_kmh` · `ctx` · `ok` | optional context — GPS speed (iPhone diag), correlation context + decode-ok flag (iPhone LDI corpus) |
+
+**Three export styles** (all plain JSONL):
+
+| file | keys | channel(s) |
+|------|------|-----------|
+| **Android** `bosch-android-<ms>.jsonl` | `t, char, note, raw` | all — `char` tags each line |
+| **iPhone diagnostic** `bosch-diag.jsonl` | `t, raw, note, gps_speed_kmh` | diagnostic `0x0011` only (no `char`) |
+| **iPhone LDI corpus** `bosch-<yyyymmdd>.jsonl` | `t_wall (ms), raw_hex, decoded, ok, ctx` | LDI `eb21` only |
+
+To gate motor energy on cadence when the diagnostic channel's own cadence (`98-5A`) wasn't in the
+capture (the boot-session case in the field map), fall back to **LDI field 2**.
+
 
 ---
 

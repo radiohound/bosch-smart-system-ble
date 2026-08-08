@@ -203,6 +203,12 @@ it (reassemble ACL → L2CAP → ATT, then split values on frame boundaries) yie
 bidirectional exchange — including the phone-to-bike writes an app-layer logger never sees. A
 parallel path uses a ComProbe hardware sniffer, which exports the same `btsnoop` structure.
 
+> **This method came from Nik Leiser of [BikeBridge](https://codeberg.org/bg443/BikeBridge).** He
+> proposed capturing the raw HCI **snoop log** — the key that exposed *both* directions of the BLE
+> link (not just the notifications an app subscribes to), which is what surfaced the phone→bike
+> **write channel** — and ran the ComProbe hardware-sniffer captures, including the Performance
+> Line SX. Decisive on both counts.
+
 ---
 
 *Field map + method: **redundo.app**. Cross-checked against ha-bosch-ebike, Nilogax/SmartBridge,

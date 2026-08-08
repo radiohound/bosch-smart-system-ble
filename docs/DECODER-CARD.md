@@ -360,6 +360,17 @@ smart system control‑unit firmware **v19+**.
 
 - Service `eb20`, characteristic `eb21`, UUID base `0000xxxx-eaa2-11e9-81b4-2a2ae2dbcce4`.
 - Pairing: LE Secure Connections with mandatory bonding (smartphone support out of scope).
+
+> ⚠️ **Bonding — do NOT make the phone an LDI *peripheral*.** Connecting as a **central** (the
+> normal phone-connects-to-bike path — e.g. after pairing once in Bosch Flow, then reusing that OS
+> bond) is safe. But making the phone **advertise as an LDI peripheral** so the bike connects *to
+> it* (the peer/bridge path) can **permanently burn the bond** on current gen4 firmware (CX and SX,
+> post-May FW): the bike bonds once, then **never reconnects to that phone again, and the bond can't
+> be cleared** — removing the accessory in Flow doesn't help. Cause: the bike resolves a phone's
+> rotating BLE MAC while *scanning* but won't use the IRK to *initiate* a connection; dedicated LDI
+> computers sidestep it with a static random MAC. The central/diagnostic path is unaffected — but
+> don't attempt the peer path on a bike you care about. (Reported on r/BoschSmartSystem by
+> u/InvestigatorSenior.)
 - A GATT **read** returns a full snapshot of all values (§2.2.3.2); **notifications** carry
   changes and **may omit unchanged fields** — absence ≠ stale (§2.2.4.3).
 - Payload: one proto3 message, all documented fields varint.

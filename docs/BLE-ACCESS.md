@@ -87,7 +87,7 @@ One bike, deeply. The full-registry sweep requests each readable address once (3
 each with a response window); the not-available set was re-tested under real load to rule out
 "only appears while riding." Command/action addresses were **not** requested (a read-style
 frame shouldn't poke a setter). Cross-bike captures welcome — the accessibility split may differ
-by drive-unit generation and firmware. See [`CAPTURE-GUIDE.md`](CAPTURE-GUIDE.md).
+by drive-unit generation and firmware.
 
 *BLE reachability results by [redundo.app](https://redundo.app). Address registry © Remko
 Weijnen, [`bes3-reader`](https://github.com/rweijnen/bosch-bes3-reader), CC BY 4.0.*

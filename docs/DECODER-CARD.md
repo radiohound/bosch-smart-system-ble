@@ -470,40 +470,6 @@ rows**; several independent confirmations and a few new leads.
 `98‑15` (motor torque ÷20, peak = rated on two bikes)**, the full channel UUIDs, and the exact spec
 connection rules. The one outside claim we reject is RobbyPee's ÷10 speed on `98‑2D`.
 
-## Reading a redundo capture (`.jsonl` container)
-
-The frame format and field maps above decode the BLE wire directly, so they work on any capture.
-This section documents one particular *container* — the **`.jsonl` files redundo's own capture tools
-export**, which the example/shared captures referenced here use. It is redundo's format, not a Bosch
-one; skip it if you capture your own way.
-
-One BLE notification per line:
-
-```json
-{"t": 1785035528.746, "char": "00000011", "note": "eco climb", "raw": "30049809..."}
-```
-
-| key | meaning |
-|-----|---------|
-| `t` | epoch **seconds** (BLE-notification arrival). The iPhone LDI corpus uses `t_wall` = epoch **milliseconds** instead |
-| `char` | which BLE characteristic it came from (full 8-hex UUID; shorthand `0011`/`eb21`/`2A63`) — **Android only**; the iPhone files are per-channel so they omit it |
-| `raw` / `raw_hex` | hex of the whole notification (may pack several frames). Android + iPhone-diag use `raw`; the iPhone LDI corpus uses `raw_hex` |
-| `note` | your session note |
-| `decoded` | (iPhone LDI corpus only) the app's own field decode, for reference |
-| `gps_speed_kmh` · `ctx` · `ok` | optional context — GPS speed (iPhone diag), correlation context + decode-ok flag (iPhone LDI corpus) |
-
-**Three export styles** (all plain JSONL):
-
-| file | keys | channel(s) |
-|------|------|-----------|
-| **Android** `bosch-android-<ms>.jsonl` | `t, char, note, raw` | all — `char` tags each line |
-| **iPhone diagnostic** `bosch-diag.jsonl` | `t, raw, note, gps_speed_kmh` | diagnostic `0x0011` only (no `char`) |
-| **iPhone LDI corpus** `bosch-<yyyymmdd>.jsonl` | `t_wall (ms), raw_hex, decoded, ok, ctx` | LDI `eb21` only |
-
-To gate motor energy on cadence when the diagnostic channel's own cadence (`98-5A`) wasn't in the
-capture (the boot-session case in the field map), fall back to **LDI field 2**.
-
-
 ---
 
 *Field map + method: **redundo.app**. LDI: Bosch Live Data Interface spec V1.0 (May 2026, embedded

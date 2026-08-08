@@ -211,182 +211,182 @@ request-only.
 
 | id | field | description | unit / scaling | stream | conf |
 |----|-------|-------------|----------------|:------:|:----:|
-| `90-9A` | ALL_ISSUE_VISUALIZATION_EVENTS | — | — | auto | ◐ |
-| `98-01` | SERIAL_NUMBER | — | — | auto | ◐ |
-| `98-02` | PART_NUMBER | — | — | auto | ◐ |
-| `98-03` | PRODUCT_CODE | — | — | auto | ◐ |
-| `98-04` | HARDWARE_VERSION | — | — | auto | ◐ |
-| `98-05` | HARDWARE_SOFTWARE_VERSION | HW/SW Version | — | auto | ◐ |
-| `98-06` | SOFTWARE_VERSION | SW Version | — | auto | ◐ |
-| `98-07` | BOOTLOADER_SOFTWARE_VERSION | FBL Version | — | auto | ◐ |
-| `98-0C` | ASSIST_MODE_SHORT_NAMES | — | n/a | auto | ◐ |
-| `98-0D` | ASSIST_MODE_LONG_NAMES | — | string list | auto | ✓ |
-| `98-0E` | ASSIST_MODE_COLORS | — | RGBA varint per mode | auto | ✓ |
-| `98-0F` | AVAILABLE_ASSIST_MODES_UPPER | — | — | auto | ◐ |
-| `98-11` | DISTRACTED_RIDING_ALERT | — | — | auto | ◐ |
-| `98-12` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE1 | — | — | auto | ◐ |
-| `98-13` | MAXIMUM_LEGAL_BIKE_SPEED | — | km/h | req | ◐ |
-| `98-17` | MAXIMUM_ASSISTANCE_SPEED | — | km/h | auto | ◐ |
-| `98-18` | ODOMETER | — | metres | auto | ✓ |
-| `98-19` | POWER_ON_TIME | Power-On Time | s | auto | ◐ |
-| `98-1A` | BIKE_NOT_DRIVING | Bike detected as not driving (motor cut-off state) | — | auto | ◐ |
-| `98-1D` | ROAD_SLOPE | — | raw (gradient) | auto | ◐ |
-| `98-25` | WALK_ASSIST_CONFIGURATION_OEM | — | — | auto | ◐ |
-| `98-26` | WALK_ASSIST_CONFIGURATION | — | — | auto | ◐ |
-| `98-27` | PRODUCT_LINE | — | — | auto | ◐ |
-| `98-28` | REAR_WHEEL_CIRCUMFERENCE_OEM | Rear Wheel Circumference (OEM) | ÷10 mm (OEM default) | auto | ◐ |
-| `98-29` | REAR_WHEEL_CIRCUMFERENCE_USER | Rear Wheel Circumference (User) | ÷10 mm | auto | ✓ |
-| `98-2A` | OEM_BRAND_IDENTIFIER | — | — | auto | ◐ |
-| `98-2B` | GEARING_SYSTEM | — | — | auto | ◐ |
-| `98-2C` | BIKE_ID | eBike ID | — | auto | ◐ |
-| `98-2E` | PRODUCT_NAME | — | — | auto | ◐ |
-| `98-2F` | REAR_WHEEL_CIRCUMFERENCE_USER_LIMITS | — | — | auto | ◐ |
-| `98-37` | MANUFACTURING_DATE | — | — | auto | ◐ |
-| `98-38` | PRODUCT_APPLICATION_REQUIRED | — | — | auto | ◐ |
-| `98-39` | PRODUCT_APPLICATION_AVAILABLE | — | — | auto | ◐ |
-| `98-3A` | GEARSHIFT_APPLICATION_REQUIRED | — | — | auto | ◐ |
-| `98-3B` | GEARSHIFT_APPLICATION_AVAILABLE | — | — | auto | ◐ |
-| `98-3C` | REGIO_SPEED_APPLICATION_REQUIRED | — | — | auto | ◐ |
-| `98-3D` | REGIO_SPEED_APPLICATION_AVAILABLE | — | — | auto | ◐ |
-| `98-42` | MAXIMUM_ASSISTANCE_SPEED_IBD | Maximum Assistance Speed (IBD) | km/h | auto | ◐ |
-| `98-46` | UDAM_MODIFICATION_POSSIBLE | — | — | auto | ◐ |
-| `98-4E` | ACTIVE_ASSIST_MODES | — | string list | auto | ✓ |
-| `98-55` | BIKE_CATEGORY | — | — | auto | ◐ |
-| `98-57` | REACHABLE_RANGE | Reachable Range (per mode, km) | one byte/mode (km) | auto | ✓ |
-| `98-5E` | OEM_BIKE_ID | — | — | auto | ◐ |
-| `98-5F` | OEM_MANUFACTURING_LOCATION | — | — | auto | ◐ |
-| `98-61` | OEM_MANUFACTURING_DATE | — | — | auto | ◐ |
-| `98-65` | BIKE_NOT_MOVING | Bike detected as stationary | — | auto | ◐ |
-| `98-68` | AVAILABLE_ASSIST_MODES_LOWER | — | id+name pairs | req | ✓ |
-| `98-69` | REQUIRED_ASSIST_MODES_LOWER | — | — | auto | ◐ |
-| `98-6C` | OEM_BRAND_NAME | — | — | auto | ◐ |
-| `98-6D` | POWER_ON_TIME_WITH_MOTOR_SUPPORT | Power-On Time (Motor Support) | s | auto | ◐ |
-| `98-70` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE2 | — | — | auto | ◐ |
-| `98-71` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE3 | — | — | auto | ◐ |
-| `98-74` | MAXIMUM_AVAILABLE_MOTOR_POWER | — | two varints (W) | auto | ✓ |
-| `98-75` | OEM_BIKE_MODEL_ID | — | — | auto | ◐ |
-| `98-7A` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE4 | Feature-properties bitset, release 4 | — | auto | ◐ |
-| `98-7D` | REGIO_SPEED_CONFIGURATION | Regional Speed Configuration ("Speed ID") | — | auto | ◐ |
-| `98-80` | DRIVE_UNIT_STATIC_FEATURE_PROPERTIES | — | — | auto | ◐ |
-| `98-84` | PRESENT_PCB_TEMPERATURE | — | zigzag/10°C (registry) | req | ◐ |
-| `98-8B` | ASSIST_MODE_LIMITS | Per-mode assist limits | — | auto | ◐ |
-| `98-8C` | MAXIMUM_CONFIGURED_DISCHARGE_CURRENT | Configured max battery discharge current | A | auto | ◐ |
+| `90‑9A` | ALL_ISSUE_VISUALIZATION_EVENTS | — | — | auto | ◐ |
+| `98‑01` | SERIAL_NUMBER | — | — | auto | ◐ |
+| `98‑02` | PART_NUMBER | — | — | auto | ◐ |
+| `98‑03` | PRODUCT_CODE | — | — | auto | ◐ |
+| `98‑04` | HARDWARE_VERSION | — | — | auto | ◐ |
+| `98‑05` | HARDWARE_SOFTWARE_VERSION | HW/SW Version | — | auto | ◐ |
+| `98‑06` | SOFTWARE_VERSION | SW Version | — | auto | ◐ |
+| `98‑07` | BOOTLOADER_SOFTWARE_VERSION | FBL Version | — | auto | ◐ |
+| `98‑0C` | ASSIST_MODE_SHORT_NAMES | — | n/a | auto | ◐ |
+| `98‑0D` | ASSIST_MODE_LONG_NAMES | — | string list | auto | ✓ |
+| `98‑0E` | ASSIST_MODE_COLORS | — | RGBA varint per mode | auto | ✓ |
+| `98‑0F` | AVAILABLE_ASSIST_MODES_UPPER | — | — | auto | ◐ |
+| `98‑11` | DISTRACTED_RIDING_ALERT | — | — | auto | ◐ |
+| `98‑12` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE1 | — | — | auto | ◐ |
+| `98‑13` | MAXIMUM_LEGAL_BIKE_SPEED | — | km/h | req | ◐ |
+| `98‑17` | MAXIMUM_ASSISTANCE_SPEED | — | km/h | auto | ◐ |
+| `98‑18` | ODOMETER | — | metres | auto | ✓ |
+| `98‑19` | POWER_ON_TIME | Power-On Time | s | auto | ◐ |
+| `98‑1A` | BIKE_NOT_DRIVING | Bike detected as not driving (motor cut-off state) | — | auto | ◐ |
+| `98‑1D` | ROAD_SLOPE | — | raw (gradient) | auto | ◐ |
+| `98‑25` | WALK_ASSIST_CONFIGURATION_OEM | — | — | auto | ◐ |
+| `98‑26` | WALK_ASSIST_CONFIGURATION | — | — | auto | ◐ |
+| `98‑27` | PRODUCT_LINE | — | — | auto | ◐ |
+| `98‑28` | REAR_WHEEL_CIRCUMFERENCE_OEM | Rear Wheel Circumference (OEM) | ÷10 mm (OEM default) | auto | ◐ |
+| `98‑29` | REAR_WHEEL_CIRCUMFERENCE_USER | Rear Wheel Circumference (User) | ÷10 mm | auto | ✓ |
+| `98‑2A` | OEM_BRAND_IDENTIFIER | — | — | auto | ◐ |
+| `98‑2B` | GEARING_SYSTEM | — | — | auto | ◐ |
+| `98‑2C` | BIKE_ID | eBike ID | — | auto | ◐ |
+| `98‑2E` | PRODUCT_NAME | — | — | auto | ◐ |
+| `98‑2F` | REAR_WHEEL_CIRCUMFERENCE_USER_LIMITS | — | — | auto | ◐ |
+| `98‑37` | MANUFACTURING_DATE | — | — | auto | ◐ |
+| `98‑38` | PRODUCT_APPLICATION_REQUIRED | — | — | auto | ◐ |
+| `98‑39` | PRODUCT_APPLICATION_AVAILABLE | — | — | auto | ◐ |
+| `98‑3A` | GEARSHIFT_APPLICATION_REQUIRED | — | — | auto | ◐ |
+| `98‑3B` | GEARSHIFT_APPLICATION_AVAILABLE | — | — | auto | ◐ |
+| `98‑3C` | REGIO_SPEED_APPLICATION_REQUIRED | — | — | auto | ◐ |
+| `98‑3D` | REGIO_SPEED_APPLICATION_AVAILABLE | — | — | auto | ◐ |
+| `98‑42` | MAXIMUM_ASSISTANCE_SPEED_IBD | Maximum Assistance Speed (IBD) | km/h | auto | ◐ |
+| `98‑46` | UDAM_MODIFICATION_POSSIBLE | — | — | auto | ◐ |
+| `98‑4E` | ACTIVE_ASSIST_MODES | — | string list | auto | ✓ |
+| `98‑55` | BIKE_CATEGORY | — | — | auto | ◐ |
+| `98‑57` | REACHABLE_RANGE | Reachable Range (per mode, km) | one byte/mode (km) | auto | ✓ |
+| `98‑5E` | OEM_BIKE_ID | — | — | auto | ◐ |
+| `98‑5F` | OEM_MANUFACTURING_LOCATION | — | — | auto | ◐ |
+| `98‑61` | OEM_MANUFACTURING_DATE | — | — | auto | ◐ |
+| `98‑65` | BIKE_NOT_MOVING | Bike detected as stationary | — | auto | ◐ |
+| `98‑68` | AVAILABLE_ASSIST_MODES_LOWER | — | id+name pairs | req | ✓ |
+| `98‑69` | REQUIRED_ASSIST_MODES_LOWER | — | — | auto | ◐ |
+| `98‑6C` | OEM_BRAND_NAME | — | — | auto | ◐ |
+| `98‑6D` | POWER_ON_TIME_WITH_MOTOR_SUPPORT | Power-On Time (Motor Support) | s | auto | ◐ |
+| `98‑70` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE2 | — | — | auto | ◐ |
+| `98‑71` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE3 | — | — | auto | ◐ |
+| `98‑74` | MAXIMUM_AVAILABLE_MOTOR_POWER | — | two varints (W) | auto | ✓ |
+| `98‑75` | OEM_BIKE_MODEL_ID | — | — | auto | ◐ |
+| `98‑7A` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE4 | Feature-properties bitset, release 4 | — | auto | ◐ |
+| `98‑7D` | REGIO_SPEED_CONFIGURATION | Regional Speed Configuration ("Speed ID") | — | auto | ◐ |
+| `98‑80` | DRIVE_UNIT_STATIC_FEATURE_PROPERTIES | — | — | auto | ◐ |
+| `98‑84` | PRESENT_PCB_TEMPERATURE | — | zigzag/10°C (registry) | req | ◐ |
+| `98‑8B` | ASSIST_MODE_LIMITS | Per-mode assist limits | — | auto | ◐ |
+| `98‑8C` | MAXIMUM_CONFIGURED_DISCHARGE_CURRENT | Configured max battery discharge current | A | auto | ◐ |
 
 ### Battery (27)
 
 | id | field | description | unit / scaling | stream | conf |
 |----|-------|-------------|----------------|:------:|:----:|
-| `80-81` | SERIAL_NUMBER | — | — | auto | ◐ |
-| `80-82` | PART_NUMBER | — | — | auto | ◐ |
-| `80-83` | PRODUCT_CODE | — | — | auto | ◐ |
-| `80-84` | HARDWARE_VERSION | — | — | auto | ◐ |
-| `80-85` | HARDWARE_SOFTWARE_VERSION | — | — | auto | ◐ |
-| `80-86` | SOFTWARE_VERSION | SW Version | — | auto | ◐ |
-| `80-87` | BOOTLOADER_SOFTWARE_VERSION | FBL Version | — | auto | ◐ |
-| `80-88` | STATE_OF_CHARGE | — | % | auto | ✓ |
-| `80-8B` | PRESENT_PACK_TEMPERATURE | — | zigzag/10°C | auto | ✓ |
-| `80-91` | REMAINING_ENERGY_FOR_RIDER | Remaining Energy (Rider) | ÷10 Wh | auto | ✓ |
-| `80-92` | REMAINING_ENERGY | — | constant 5 Wh offset | auto | ✓ |
-| `80-93` | MAXIMUM_ALLOWED_DISCHARGE_CURRENT | — | ÷1000 A (mA) | req | ✓ |
-| `80-96` | NUMBER_OF_FULL_CHARGE_CYCLES | Full Charge Cycles | — | auto | ◐ |
-| `80-9B` | PRODUCT_NAME | — | text | auto | ✓ |
-| `80-9C` | DELIVERED_WH_OVER_LIFETIME | Delivered Wh (Lifetime) | Wh (direct monotonic) | auto | ✓ |
-| `80-A4` | MANUFACTURING_DATE | — | — | auto | ◐ |
-| `80-B0` | NUMBER_OF_FULL_CHARGE_CYCLES_ON_BIKE | Full charge cycles counted on-bike | cycles | auto | ◐ |
-| `80-B4` | TOTAL_ENERGY | Total energy delivered | Wh | auto | ◐ |
-| `80-BC` | SYSTEM_STATE_OF_CHARGE_FOR_RIDER | — | % | auto | ◐ |
-| `80-C2` | FEATURE_PROPERTIES_RELEASE4 | Feature properties, release 4 | — | auto | ◐ |
-| `80-C5` | INSTANCE_REMAINING_ENERGY_FOR_RIDER | Remaining energy for rider (instance) | n/a | auto | ✓ |
-| `80-CA` | INSTANCE_STATE_OF_CHARGE_FOR_RIDER | State of charge for rider (instance) | % | auto | ◐ |
-| `80-D2` | PRESENT_FET_TEMPERATURE | — | zigzag/10°C (registry) | req | ◐ |
-| `80-D7` | DELIVERED_AH_OVER_LIFETIME | Delivered Ah (Lifetime) | Ah | auto | ◐ |
-| `80-D8` | STATE_OF_HEALTH | — | % | auto | ◐ |
-| `80-D9` | SYSTEM_TOTAL_ENERGY_FOR_RIDER | — | Wh | auto | ◐ |
-| `80-E2` | TOTAL_CAPACITY | — | ÷100 Ah | auto | ✓ |
+| `80‑81` | SERIAL_NUMBER | — | — | auto | ◐ |
+| `80‑82` | PART_NUMBER | — | — | auto | ◐ |
+| `80‑83` | PRODUCT_CODE | — | — | auto | ◐ |
+| `80‑84` | HARDWARE_VERSION | — | — | auto | ◐ |
+| `80‑85` | HARDWARE_SOFTWARE_VERSION | — | — | auto | ◐ |
+| `80‑86` | SOFTWARE_VERSION | SW Version | — | auto | ◐ |
+| `80‑87` | BOOTLOADER_SOFTWARE_VERSION | FBL Version | — | auto | ◐ |
+| `80‑88` | STATE_OF_CHARGE | — | % | auto | ✓ |
+| `80‑8B` | PRESENT_PACK_TEMPERATURE | — | zigzag/10°C | auto | ✓ |
+| `80‑91` | REMAINING_ENERGY_FOR_RIDER | Remaining Energy (Rider) | ÷10 Wh | auto | ✓ |
+| `80‑92` | REMAINING_ENERGY | — | constant 5 Wh offset | auto | ✓ |
+| `80‑93` | MAXIMUM_ALLOWED_DISCHARGE_CURRENT | — | ÷1000 A (mA) | req | ✓ |
+| `80‑96` | NUMBER_OF_FULL_CHARGE_CYCLES | Full Charge Cycles | — | auto | ◐ |
+| `80‑9B` | PRODUCT_NAME | — | text | auto | ✓ |
+| `80‑9C` | DELIVERED_WH_OVER_LIFETIME | Delivered Wh (Lifetime) | Wh (direct monotonic) | auto | ✓ |
+| `80‑A4` | MANUFACTURING_DATE | — | — | auto | ◐ |
+| `80‑B0` | NUMBER_OF_FULL_CHARGE_CYCLES_ON_BIKE | Full charge cycles counted on-bike | cycles | auto | ◐ |
+| `80‑B4` | TOTAL_ENERGY | Total energy delivered | Wh | auto | ◐ |
+| `80‑BC` | SYSTEM_STATE_OF_CHARGE_FOR_RIDER | — | % | auto | ◐ |
+| `80‑C2` | FEATURE_PROPERTIES_RELEASE4 | Feature properties, release 4 | — | auto | ◐ |
+| `80‑C5` | INSTANCE_REMAINING_ENERGY_FOR_RIDER | Remaining energy for rider (instance) | n/a | auto | ✓ |
+| `80‑CA` | INSTANCE_STATE_OF_CHARGE_FOR_RIDER | State of charge for rider (instance) | % | auto | ◐ |
+| `80‑D2` | PRESENT_FET_TEMPERATURE | — | zigzag/10°C (registry) | req | ◐ |
+| `80‑D7` | DELIVERED_AH_OVER_LIFETIME | Delivered Ah (Lifetime) | Ah | auto | ◐ |
+| `80‑D8` | STATE_OF_HEALTH | — | % | auto | ◐ |
+| `80‑D9` | SYSTEM_TOTAL_ENERGY_FOR_RIDER | — | Wh | auto | ◐ |
+| `80‑E2` | TOTAL_CAPACITY | — | ÷100 Ah | auto | ✓ |
 
 ### RemoteControl (56)
 
 | id | field | description | unit / scaling | stream | conf |
 |----|-------|-------------|----------------|:------:|:----:|
-| `A0-11` | ACTIVE_UI_PRIORITY | — | — | auto | ◐ |
-| `A0-21` | TIME_ZONE | — | — | req | ◐ |
-| `A0-22` | TIME | — | — | req | ◐ |
-| `A0-23` | LOCAL_TIME_OFFSET | — | — | req | ◐ |
-| `A0-25` | POWER_CYCLE_TIME | — | — | req | ◐ |
-| `A0-41` | AVAILABLE_BUTTONS | Available buttons bitmask | — | auto | ◐ |
-| `A0-61` | SERIAL_NUMBER | — | — | auto | ◐ |
-| `A0-62` | PART_NUMBER | — | — | auto | ◐ |
-| `A0-63` | HARDWARE_VERSION | — | — | auto | ◐ |
-| `A0-64` | HARDWARE_SOFTWARE_VERSION | — | — | auto | ◐ |
-| `A0-65` | PRODUCT_CODE | — | — | auto | ◐ |
-| `A0-66` | MANUFACTURING_DATE | — | — | auto | ◐ |
-| `A0-6B` | SOFTWARE_VERSION | — | — | auto | ◐ |
-| `A0-6E` | BOOTLOADER_SOFTWARE_VERSION | — | — | auto | ◐ |
-| `A0-6F` | PRODUCT_NAME | — | — | auto | ◐ |
-| `A0-81` | DRIVE_UNIT_AVAILABLE | — | — | auto | ◐ |
-| `A0-83` | BATTERY1_AVAILABLE | — | — | auto | ◐ |
-| `A0-85` | HEAD_UNIT_AVAILABLE | — | — | auto | ◐ |
-| `A0-C6` | SOFTWARE_UPDATE_DOWNLOADS_FINISHED | — | — | req | ◐ |
-| `A0-C7` | CURRENT_MANIFEST | — | — | auto | ◐ |
-| `A0-E6` | DRIVE_UNIT_UDS_IDENTIFICATION_DATA | — | — | req | ◐ |
-| `A0-E7` | BATTERY1_UDS_IDENTIFICATION_DATA | — | — | req | ◐ |
-| `A0-E8` | HEAD_UNIT_UDS_IDENTIFICATION_DATA | — | — | req | ◐ |
-| `A0-F1` | BOOTLOADER_ERROR_STATES | — | — | req | ◐ |
-| `A0-F4` | STORED_SOFTWARE_UPDATE_STATUS | — | — | auto | ◐ |
-| `A0-F5` | STORED_BOOTLOADER_ERROR_STATES | — | — | req | ◐ |
-| `A1-01` | REMOTE_CONTROL_FEATURE_PROPERTIES_RELEASE1 | — | — | auto | ◐ |
-| `A1-08` | REMOTE_CONTROL_FEATURE_PROPERTIES_RELEASE2 | — | — | auto | ◐ |
-| `A1-09` | REMOTE_CONTROL_FEATURE_PROPERTIES_RELEASE3 | — | — | auto | ◐ |
-| `A1-0A` | REMOTE_CONTROL_FEATURE_PROPERTIES_RELEASE4 | — | — | auto | ◐ |
-| `A1-0B` | REMOTE_CONTROL_STATIC_FEATURE_PROPERTIES | — | — | auto | ◐ |
-| `A1-41` | AMBIENT_BRIGHTNESS | — | — | req | ◐ |
-| `A1-51` | ACTIVE_ISSUE_VISUALIZATION_EVENT | — | — | auto | ◐ |
-| `A1-62` | GEAR_CADENCE_LIMITS | — | — | auto | ◐ |
-| `A1-65` | CURRENT_GEAR_CADENCE_SETPOINT | — | — | auto | ◐ |
-| `A1-81` | LANGUAGE | — | text | auto | ✓ |
-| `A1-82` | UNITS | — | — | auto | ◐ |
-| `A1-83` | TIME_FORMAT | — | — | auto | ◐ |
-| `A1-84` | BIKE_ID | — | — | req | ◐ |
-| `A1-86` | BIKE_NAME | — | text | auto | ✓ |
-| `A1-98` | MAXIMUM_BATTERIES_AVAILABLE_AT_SOME_POINT | — | — | req | ◐ |
-| `A1-9B` | LOCK_SOUND_ENABLED | Lock/alarm sound enabled setting | — | auto | ◐ |
-| `A1-C1` | INTERNAL_BATTERY_VOLTAGE | — | ÷1000 V | req | ◐ |
-| `A1-C5` | INTERNAL_BATTERY_TEMPERATURE | — | — | req | ◐ |
-| `A1-C6` | PCB_TEMPERATURE | — | — | req | ◐ |
-| `A2-0F` | BLE_CENTRAL_GET_AVAILABLE_DATABASE_SLOTS | — | — | req | ◐ |
-| `A2-10` | BLE_CENTRAL_DATABASE | — | — | auto | ◐ |
-| `A2-16` | BLE_CENTRAL_SCAN_FILTER | — | — | req | ◐ |
-| `A2-41` | ACTIVITY_ID | Ride/activity session identifier | — | auto | ◐ |
-| `A2-44` | TIME_ZONE_OF_ACTIVITY | Timezone/UTC offset at activity start | min | auto | ◐ |
-| `A2-4C` | AVERAGE_HEART_RATE | Average heart rate of ride activity | bpm | auto | ◐ |
-| `A2-4D` | MAXIMUM_HEART_RATE | Maximum heart rate of ride activity | bpm | auto | ◐ |
-| `A2-50` | AUTOMATIC_ACTIVITY_RESET | Automatic activity-reset trigger condition | — | auto | ◐ |
-| `A2-52` | ASSIST_MODE_USAGE_TOTAL | Per-assist-mode total usage duration | — | auto | ◐ |
-| `A2-53` | ASSIST_MODE_USAGE_WITH_MOTOR_SUPPORT_ACTIVE | Per-assist-mode usage duration while motor actively assisting | — | req | ◐ |
-| `A2-55` | BRAKE_EVENTS | Aggregate brake-event counters | — | auto | ◐ |
+| `A0‑11` | ACTIVE_UI_PRIORITY | — | — | auto | ◐ |
+| `A0‑21` | TIME_ZONE | — | — | req | ◐ |
+| `A0‑22` | TIME | — | — | req | ◐ |
+| `A0‑23` | LOCAL_TIME_OFFSET | — | — | req | ◐ |
+| `A0‑25` | POWER_CYCLE_TIME | — | — | req | ◐ |
+| `A0‑41` | AVAILABLE_BUTTONS | Available buttons bitmask | — | auto | ◐ |
+| `A0‑61` | SERIAL_NUMBER | — | — | auto | ◐ |
+| `A0‑62` | PART_NUMBER | — | — | auto | ◐ |
+| `A0‑63` | HARDWARE_VERSION | — | — | auto | ◐ |
+| `A0‑64` | HARDWARE_SOFTWARE_VERSION | — | — | auto | ◐ |
+| `A0‑65` | PRODUCT_CODE | — | — | auto | ◐ |
+| `A0‑66` | MANUFACTURING_DATE | — | — | auto | ◐ |
+| `A0‑6B` | SOFTWARE_VERSION | — | — | auto | ◐ |
+| `A0‑6E` | BOOTLOADER_SOFTWARE_VERSION | — | — | auto | ◐ |
+| `A0‑6F` | PRODUCT_NAME | — | — | auto | ◐ |
+| `A0‑81` | DRIVE_UNIT_AVAILABLE | — | — | auto | ◐ |
+| `A0‑83` | BATTERY1_AVAILABLE | — | — | auto | ◐ |
+| `A0‑85` | HEAD_UNIT_AVAILABLE | — | — | auto | ◐ |
+| `A0‑C6` | SOFTWARE_UPDATE_DOWNLOADS_FINISHED | — | — | req | ◐ |
+| `A0‑C7` | CURRENT_MANIFEST | — | — | auto | ◐ |
+| `A0‑E6` | DRIVE_UNIT_UDS_IDENTIFICATION_DATA | — | — | req | ◐ |
+| `A0‑E7` | BATTERY1_UDS_IDENTIFICATION_DATA | — | — | req | ◐ |
+| `A0‑E8` | HEAD_UNIT_UDS_IDENTIFICATION_DATA | — | — | req | ◐ |
+| `A0‑F1` | BOOTLOADER_ERROR_STATES | — | — | req | ◐ |
+| `A0‑F4` | STORED_SOFTWARE_UPDATE_STATUS | — | — | auto | ◐ |
+| `A0‑F5` | STORED_BOOTLOADER_ERROR_STATES | — | — | req | ◐ |
+| `A1‑01` | REMOTE_CONTROL_FEATURE_PROPERTIES_RELEASE1 | — | — | auto | ◐ |
+| `A1‑08` | REMOTE_CONTROL_FEATURE_PROPERTIES_RELEASE2 | — | — | auto | ◐ |
+| `A1‑09` | REMOTE_CONTROL_FEATURE_PROPERTIES_RELEASE3 | — | — | auto | ◐ |
+| `A1‑0A` | REMOTE_CONTROL_FEATURE_PROPERTIES_RELEASE4 | — | — | auto | ◐ |
+| `A1‑0B` | REMOTE_CONTROL_STATIC_FEATURE_PROPERTIES | — | — | auto | ◐ |
+| `A1‑41` | AMBIENT_BRIGHTNESS | — | — | req | ◐ |
+| `A1‑51` | ACTIVE_ISSUE_VISUALIZATION_EVENT | — | — | auto | ◐ |
+| `A1‑62` | GEAR_CADENCE_LIMITS | — | — | auto | ◐ |
+| `A1‑65` | CURRENT_GEAR_CADENCE_SETPOINT | — | — | auto | ◐ |
+| `A1‑81` | LANGUAGE | — | text | auto | ✓ |
+| `A1‑82` | UNITS | — | — | auto | ◐ |
+| `A1‑83` | TIME_FORMAT | — | — | auto | ◐ |
+| `A1‑84` | BIKE_ID | — | — | req | ◐ |
+| `A1‑86` | BIKE_NAME | — | text | auto | ✓ |
+| `A1‑98` | MAXIMUM_BATTERIES_AVAILABLE_AT_SOME_POINT | — | — | req | ◐ |
+| `A1‑9B` | LOCK_SOUND_ENABLED | Lock/alarm sound enabled setting | — | auto | ◐ |
+| `A1‑C1` | INTERNAL_BATTERY_VOLTAGE | — | ÷1000 V | req | ◐ |
+| `A1‑C5` | INTERNAL_BATTERY_TEMPERATURE | — | — | req | ◐ |
+| `A1‑C6` | PCB_TEMPERATURE | — | — | req | ◐ |
+| `A2‑0F` | BLE_CENTRAL_GET_AVAILABLE_DATABASE_SLOTS | — | — | req | ◐ |
+| `A2‑10` | BLE_CENTRAL_DATABASE | — | — | auto | ◐ |
+| `A2‑16` | BLE_CENTRAL_SCAN_FILTER | — | — | req | ◐ |
+| `A2‑41` | ACTIVITY_ID | Ride/activity session identifier | — | auto | ◐ |
+| `A2‑44` | TIME_ZONE_OF_ACTIVITY | Timezone/UTC offset at activity start | min | auto | ◐ |
+| `A2‑4C` | AVERAGE_HEART_RATE | Average heart rate of ride activity | bpm | auto | ◐ |
+| `A2‑4D` | MAXIMUM_HEART_RATE | Maximum heart rate of ride activity | bpm | auto | ◐ |
+| `A2‑50` | AUTOMATIC_ACTIVITY_RESET | Automatic activity-reset trigger condition | — | auto | ◐ |
+| `A2‑52` | ASSIST_MODE_USAGE_TOTAL | Per-assist-mode total usage duration | — | auto | ◐ |
+| `A2‑53` | ASSIST_MODE_USAGE_WITH_MOTOR_SUPPORT_ACTIVE | Per-assist-mode usage duration while motor actively assisting | — | req | ◐ |
+| `A2‑55` | BRAKE_EVENTS | Aggregate brake-event counters | — | auto | ◐ |
 
 ### HeadUnit (18)
 
 | id | field | description | unit / scaling | stream | conf |
 |----|-------|-------------|----------------|:------:|:----:|
-| `8D-01` | SERIAL_NUMBER | — | — | auto | ◐ |
-| `8D-02` | PART_NUMBER | — | — | auto | ◐ |
-| `8D-03` | PRODUCT_CODE | — | — | auto | ◐ |
-| `8D-04` | HARDWARE_VERSION | — | — | auto | ◐ |
-| `8D-05` | HARDWARE_SOFTWARE_VERSION | — | — | auto | ◐ |
-| `8D-06` | SOFTWARE_VERSION | — | — | auto | ◐ |
-| `8D-07` | BOOTLOADER_SOFTWARE_VERSION | — | — | auto | ◐ |
-| `8D-08` | MANUFACTURING_DATE | — | — | auto | ◐ |
-| `8D-09` | PRODUCT_NAME | — | — | auto | ◐ |
-| `8D-19` | HEAD_UNIT_FEATURE_PROPERTIES_RELEASE2 | — | — | auto | ◐ |
-| `8D-1B` | KEY_DEVICE | Status of phone-as-key-device pairing | — | auto | ◐ |
-| `8D-1D` | HEAD_UNIT_FEATURE_PROPERTIES_RELEASE3 | — | — | auto | ◐ |
-| `8D-1E` | HEAD_UNIT_FEATURE_PROPERTIES_RELEASE4 | — | — | auto | ◐ |
-| `8D-1F` | UNLOCK_TOKENS_NONCE | Freshness/anti-replay nonce for unlock-token generation | — | auto | ◐ |
-| `8D-22` | VIEW_STRIPE_CONFIGURATION | — | — | auto | ◐ |
-| `8D-84` | HEAD_UNIT_STATIC_FEATURE_PROPERTIES | — | — | auto | ◐ |
-| `8D-85` | SUPPORTED_TILE_IDS | — | — | req | ◐ |
-| `8D-8A` | SUPPORTED_TILE_SIZES | — | — | req | ◐ |
+| `8D‑01` | SERIAL_NUMBER | — | — | auto | ◐ |
+| `8D‑02` | PART_NUMBER | — | — | auto | ◐ |
+| `8D‑03` | PRODUCT_CODE | — | — | auto | ◐ |
+| `8D‑04` | HARDWARE_VERSION | — | — | auto | ◐ |
+| `8D‑05` | HARDWARE_SOFTWARE_VERSION | — | — | auto | ◐ |
+| `8D‑06` | SOFTWARE_VERSION | — | — | auto | ◐ |
+| `8D‑07` | BOOTLOADER_SOFTWARE_VERSION | — | — | auto | ◐ |
+| `8D‑08` | MANUFACTURING_DATE | — | — | auto | ◐ |
+| `8D‑09` | PRODUCT_NAME | — | — | auto | ◐ |
+| `8D‑19` | HEAD_UNIT_FEATURE_PROPERTIES_RELEASE2 | — | — | auto | ◐ |
+| `8D‑1B` | KEY_DEVICE | Status of phone-as-key-device pairing | — | auto | ◐ |
+| `8D‑1D` | HEAD_UNIT_FEATURE_PROPERTIES_RELEASE3 | — | — | auto | ◐ |
+| `8D‑1E` | HEAD_UNIT_FEATURE_PROPERTIES_RELEASE4 | — | — | auto | ◐ |
+| `8D‑1F` | UNLOCK_TOKENS_NONCE | Freshness/anti-replay nonce for unlock-token generation | — | auto | ◐ |
+| `8D‑22` | VIEW_STRIPE_CONFIGURATION | — | — | auto | ◐ |
+| `8D‑84` | HEAD_UNIT_STATIC_FEATURE_PROPERTIES | — | — | auto | ◐ |
+| `8D‑85` | SUPPORTED_TILE_IDS | — | — | req | ◐ |
+| `8D‑8A` | SUPPORTED_TILE_SIZES | — | — | req | ◐ |
 
 ## Bosch LDI (`char` = `eb21`)
 

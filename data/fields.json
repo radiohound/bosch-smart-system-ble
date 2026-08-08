@@ -75,9 +75,9 @@
     {
       "id": "98-15",
       "field": "Motor torque",
-      "scaling": "unconfirmed",
-      "confidence": "candidate",
-      "note": "correlates r=0.93 with motor power; RobbyPee's guess; needs bench anchor"
+      "scaling": "raw / 20 = Nm",
+      "confidence": "verified",
+      "note": "peak = rated torque on two bikes (CX 85.1->85Nm / SX 56.6->55Nm); r=0.93 vs motor power; DriveUnit.MOTOR_TORQUE"
     },
     {
       "id": "98-1D",

@@ -53,8 +53,8 @@ each field labelled with a confidence marker and the evidence behind it.
 - **Fields are verified, not guessed.** Motor/rider power in watts (`98-5D`/`98-5B`),
   rider torque ÷20 = N·m (`98-14`, r = 1.000 vs LDI), cadence ÷2 (`98-5A`), speed ÷100 km/h
   (`98-2D`, integrates to odometer within 0.3%), delivered energy in Wh (`80-9C`), remaining
-  energy ÷10 Wh (`80-91`), battery temp `zigzag(raw)/10` °C (`80-8B`). Remaining candidates like
-  `98-15` motor torque are marked as such, with the exact evidence needed to close them.
+  energy ÷10 Wh (`80-91`), battery temp `zigzag(raw)/10` °C (`80-8B`), motor torque ÷20 N·m
+  (`98-15`, peak = rated on two bikes). Any remaining candidates are marked as such.
 - **Catch the bike's boot.** Which fields you get depends on *when you subscribe*, not the
   hardware — subscribe at power-on for the full set (both speed fields, cadence, and the
   stored-log transfer); join mid-session and you get a reduced set. Full note in the card.

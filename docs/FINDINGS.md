@@ -88,11 +88,11 @@ verified results:
 - **Assist mode names, IDs, catalog, and colors** live on the `18-xx` family; the assist
   level itself is `98-09`.
 
-The honest not-yet-proven one: **motor torque** (`98-15`) clearly tracks motor power (r = 0.93)
-but its scaling isn't nailed down — marked a candidate in the card, with the exact measurement
-needed to close it. (**`80-8B`** battery temperature, once a candidate, is now resolved as
-**`zigzag(raw)/10` = °C** — it matches Bosch Flow's `presentCellTemperature` and the registry,
-and reads the *internal* cell temperature, which is why surface-IR anchors never fit it.)
+Two candidates closed this round: **motor torque** (`98-15`) is raw ÷ 20 = N·m — its ride peak
+lands on each bike's *rated* torque (CX **85 N·m**, SX **55 N·m**; see §5), which pins the scaling.
+And **`80-8B`** battery temperature is **`zigzag(raw)/10` = °C** — it matches Bosch Flow's
+`presentCellTemperature` and the registry, and reads the *internal* cell temperature, which is why
+surface-IR anchors never fit it.
 
 > ⚠️ **One trap worth repeating:** motor power (`98-5D`) is event-pushed and *omits zeros* —
 > the "motor off" moments aren't sent. Don't integrate it raw for energy (you'll blow past
@@ -130,40 +130,48 @@ reachability map are in **[BLE-ACCESS.md](BLE-ACCESS.md)**.
 
 Field IDs are widely feared to shift wholesale between drive-unit generations — a published
 report (RobbyPee issue #6: a BDU3741/CX and BDU3143/SX at FW 17.16.0) claims *none* of the
-documented IDs matched. Our one cross-generation data point — a Performance Line **SX**
-contributed by Nik, alongside our **CX** (BDU3740) — says the truth is narrower: **the core is
-stable, the differences are specific.**
+documented IDs matched. We compared a **CX hill-climb** (our BDU3740) against a **Performance
+Line SX ride** (contributed by Nik) — both *moving*, so the fields line up fairly — and the
+truth is far narrower: **the physics IDs and scalings are identical; only two hardware specs and
+the config namespace actually differ.**
 
-**What's identical CX ↔ SX:**
+**Riding CX vs riding SX — same IDs, same scalings:**
 
-- **Transport and the core power/battery IDs.** `98-5D` motor power and `98-5B` rider power
-  carry live varying watts with the same meaning; the battery block matches too — `80-9C`
-  delivered Wh, `80-91` SoC, `80-8B` temperature, the `80-92`/`80-C5` pair. This directly
-  refutes the "everything shifts" fear for the fields that matter.
-- **Cadence ÷2 and the write/command grammar** (subscribe / stop / rate / config frames) are
-  byte-for-byte the same, including the assist-mode config-write mechanism.
+| field (scaling) | CX (Jul climb) | SX (Nik's ride) |
+|---|---|---|
+| motor power `98-5D` | 6–**597 W** | 57–**333 W** |
+| rider power `98-5B` | 5–296 W | 24–116 W |
+| cadence `98-5A` (÷2) | 6–108 rpm | 27–70 rpm |
+| rider torque `98-14` (÷20) | 5–45.5 Nm | 6.4–20.1 Nm |
+| **motor torque `98-15` (÷20)** | 4.8–**85.1 Nm** | 10.7–**56.6 Nm** |
+| speed `98-2D` (÷100) | 2.5–60.9 km/h | 2.5–25 km/h |
+| max motor power `98-74` | 600 W | 600 W |
 
-**What differs:**
+Every mover streams on **both** drive units' `0x0011` channel with the **same ID and scaling**.
+With both captures riding there are **zero SX-only telemetry IDs** — the earlier impression that
+"the SX doesn't stream torque/cadence" was a *parked-vs-riding* artifact (from a Flow capture
+that simply didn't subscribe to them). The SX carries torque and cadence on the diagnostic
+channel exactly like the CX.
 
-| aspect | CX (our BDU3740) | SX (Nik's) |
-|--------|------------------|------------|
+**The genuine differences — two hardware specs + the namespace:**
+
+| aspect | CX (BDU3740) | SX (Nik's) |
+|--------|--------------|------------|
+| **Motor torque class** (`98-15` ÷20 peak) | **85.1 → 85 Nm rated** | **56.6 → 55 Nm rated** |
+| **Battery total capacity** (`80-E2` ÷100) | 2113 → **21.1 Ah** (750 Wh) | 1143 → **11.4 Ah** (~400 Wh) |
 | Assist-mode config-key namespace | `A100M…` (+ `S100RUCZ20`) | `A100E…` |
-| Battery total capacity (`80-E2`) | 2113 → **21.1 Ah** (PowerTube 750) | 1143 → **11.4 Ah** (smaller pack) |
 | Component / firmware (Device Info `0x180A`) | head **BHU3600** / remote **BRC3600**, SW **20.27.0** | System Controller **BRC3100**, SW **20.9.0**, HW 4.1.3 |
-| Torque/cadence on the `0x0011` diagnostic channel | first-class, physics-verified | Flow doesn't request them, so they don't stream — see caveat |
 
-**Two honest caveats on those differences:**
+That motor-torque row is a two-for-one: each bike's `98-15 ÷ 20` **peak lands on its exact rated
+torque** (CX 85 Nm, SX 55 Nm), which *confirms the ÷20 scaling* **and** captures the real motor
+difference in one shot.
 
-- The SX torque/cadence gap is **"Flow doesn't ask," not "the SX lacks them."** A passive Flow
-  capture can't distinguish a hardware absence from an app-config choice, it's **N = 1 SX**, and
-  the **LDI carries cadence and rider torque regardless** (fields 2 and 7). Don't read it as an
-  SX limitation.
-- An earlier claim of a CX/SX **speed-scaling split** (÷100 vs ÷10) is **retracted** — it came
-  from an unknown-hardware example, not a verified SX. Our CX is ÷100, cross-confirmed by the LDI.
+> An earlier claim of a CX/SX **speed-scaling split** (÷100 vs ÷10) is **retracted** — it came
+> from an unknown-hardware example, not a verified SX. Both our CX and this SX are ÷100.
 
-**Bottom line:** re-verify on your own drive unit rather than inheriting a table — but expect the
-power/battery core to hold, with the real differences in **configuration, capacity, and firmware**
-rather than the physics IDs.
+**Bottom line:** the physics IDs and scalings carry across generations unchanged; the real
+differences are **motor torque class, battery capacity, and the config namespace** — not the
+telemetry map. (Still N = 1 per generation — re-verify on your own drive unit.)
 
 ## 6. What this does *not* show (honest limits)
 

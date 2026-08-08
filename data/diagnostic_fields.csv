@@ -2,7 +2,7 @@ id,field,scaling,confidence,note
 98-5D,Motor power,watts (direct),verified,event-pushed; OMITS ZEROS - do not integrate raw for energy
 98-5B,Rider power,watts (direct),verified,matches LDI field 5
 98-14,Rider torque,raw / 20 = Nm,verified_android,r=1.000 vs LDI field 7 (98-14 = 2x LDI-7)
-98-15,Motor torque,unconfirmed,candidate,correlates r=0.93 with motor power; RobbyPee's guess; needs bench anchor
+98-15,Motor torque,raw / 20 = Nm,verified,peak = rated torque on two bikes (CX 85.1->85Nm / SX 56.6->55Nm); r=0.93 vs motor power; DriveUnit.MOTOR_TORQUE
 98-1D,Road slope,raw (gradient),candidate,DriveUnit.ROAD_SLOPE per bes3-reader registry; small ints 1-62; weak motor-power corr fits gradient not current
 80-9C,Delivered energy,Wh (direct monotonic),verified,ride Wh = last - first
 80-88,Battery SoC,%,verified,derived from 80-91

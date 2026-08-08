@@ -92,40 +92,40 @@ device held the telemetry session) — no motor data in it.
 
 | id | field | scaling | conf |
 |----|-------|---------|:---:|
-| `0x98-5D` | **Motor power** | watts (direct) | ✓ |
-| `0x98-5B` | **Rider power** | watts (direct) — matches LDI field 5 | ✓ |
-| `0x98-14` | **Rider torque** | raw **÷ 20** = Nm — cross‑checked against LDI field 7 at **r = 1.000** (98‑14 = exactly 2× LDI‑7) | ✓ᵃ |
-| `0x98-15` | **Motor torque** | correlates **r = 0.93** with motor power (best of any field); this is RobbyPee's `98‑15` guess. Scaling unconfirmed — his ÷200 gives implausibly low Nm; needs a bench anchor | ? |
-| `0x98-1D` | **Road slope** | small ints 1–62, weak (r≈0.5) motor‑power correlation — which fits **gradient** (steeper → more assist), not the earlier "motor current" guess. Matches **`DriveUnit.ROAD_SLOPE`** in the bes3‑reader registry; exact scaling not yet pinned | ? |
-| `0x80-9C` | **Delivered energy** | Wh (direct, monotonic; **ride Wh = last − first**) | ✓ |
-| `0x80-88` | Battery SoC | % | ✓ |
-| `0x98-5A` | Cadence | raw **÷ 2** = rpm. Present **only when the capture catches the bike's boot session** (see capture note); otherwise absent — gate on **LDI field 2** instead | ✓ |
-| `0x98-08` | Speed (2nd field) | raw **÷ 100** = km/h — same speed as `98-2D`, appears **alongside** it when the boot session is caught | ✓ |
-| `0x98-2D` | **Speed (always present)** | raw **÷ 100** = km/h — verified integrates to odometer within **0.3%** (−0.2% measured) | ✓ᵃ |
-| `0x98-09` | Assist level | 0–4 | ✓ |
-| `0x98-18` | Odometer | metres — matches LDI field 12 | ✓ |
-| `0x80-E2` | **Battery total capacity** | raw **÷ 100** = Ah (2113 → **21.1 Ah** on the PowerTube 750; Nik's SX reads 1143 → 11.4 Ah) — matches **`Battery.TOTAL_CAPACITY`** in the registry. **NOT wheel circumference** (the earlier guess): it never changes with the Flow wheel setting because it isn't wheel‑related | ✓ |
-| `0x98-29` | **Rear wheel circumference (user)** | raw **÷ 10** = mm — the Flow wheel setting itself (`0x98-28` = OEM default; `0x98-2F` = allowed limits). `DriveUnit.REAR_WHEEL_CIRCUMFERENCE_USER`. This is where wheel circumference actually lives (the earlier `80-E2` guess was battery capacity) | ✓ |
-| `0x98-0C` | Assist mode names | **absent on smart system** — names arrive on `18-0D` instead | ✗ᵃ |
-| `0x18-0D` | **Assist mode names** (configured) | string list, index = `98-09` value (e.g. OFF/ECO/TOUR+/eMTB‑shortcrank/eMTB+) | ✓ᵃ |
-| `0x98-4E` | Assist mode **IDs** (configured slots) | string list (e.g. A100M00040, A100MSPIC7…) | ✓ᵃ |
-| `0x18-68` | Assist mode **catalog** | all available modes, id + name pairs (ECO/ECO+/TOUR/TOUR+/SPORT/eMTB/eMTB+/TURBO/AUTO…) | ✓ᵃ |
-| `0x18-0E` | **Per‑mode display colors** | one RGBA varint per configured mode, same order as `18-0D` (OFF = transparent; e.g. ECO `#78BE20`, TOUR+ `#00A5D8`, eMTB `#9643ED`, TURBO‑red `#E20015` — the Kiox/LED‑Remote mode colors) | ✓ᵃ |
-| `0x00-9B` | **Battery name** | text ("PowerTube 750"); uses extended addressing `C0 80 10` before the `0A` tag | ✓ |
-| `0x98-74` | Motor ratings | two varints, W (250/600 on BDU3740; 600/600 on Android capture) | ✓ᵃ |
-| `0xA1-86` | Product string | text ("smart system eBike") | ✓ᵃ |
-| `0xA1-81` | Locale | text (e.g. "en-GB") | ✓ᵃ |
-| `0x80-8B` | **Battery pack temperature** | **°C = zigzag(raw)/10** (raw is a plain varint; a bare raw/10 reads ~2× high — zigzag‑decode first, `zigzag(n) = (n>>1) ^ -(n&1)`). Matches Bosch Flow's `presentCellTemperature` and the registry (`Battery.PRESENT_PACK_TEMPERATURE`, signed ÷10); a 60‑min charge test tracks a textbook 22.5 → 28.6 °C warm‑up. This is the **internal cell** temp, so **surface IR anchors don't apply** — the earlier surface‑IR linear fit (°C ≈ 0.35·raw − 139) is superseded for that reason | ✓ |
-| `0x80-D2` | **Battery FET temperature** | **request‑only** (not passively streamed) — reads a plausible ~28–35 °C at `zigzag(raw)/10` (the registry's signed‑÷10). `Battery.PRESENT_FET_TEMPERATURE` | ? |
-| `0x98-84` | **Drive‑unit PCB temperature** | **request‑only** — reads ~23–27 °C at `zigzag(raw)/10`, warmer under load. `DriveUnit.PRESENT_PCB_TEMPERATURE` | ? |
-| `0xA1-C1` | **Remote internal battery** voltage | ~**4.185 V** (÷1000) — the remote/head‑unit's *own* cell, **not** the traction pack. `RemoteControl.INTERNAL_BATTERY_VOLTAGE`. The **only voltage readable over BLE** (pack voltage `80-8C` is USB‑only) | ? |
-| `0x80-93` | **Max allowed discharge current** | raw is **milliamps** → **÷ 1000** = A: 60000 → **60.0 A** — a protection ceiling (a 600 W peak pulls only ~17 A). `Battery.MAXIMUM_ALLOWED_DISCHARGE_CURRENT`. Live current `80-94` is **USB‑only, refused over BLE even under load** | ✓ᵃ |
-| `0x98-57` | **Per‑mode range estimates** | one byte per configured mode, km (e.g. `27 1f 14 10` = 39/31/20/16 km); identical to LDI field 3; recomputes with riding style, declines with SoC | ✓ᵃ |
-| `0xA2-43` | Timer / uptime counter | **NOT temperature** | ✗ |
-| `0x80-91` | **Remaining battery energy** | ÷ 10 = Wh. `80-88` SoC is derived from it: implied full capacity constant at **724 Wh** across 15 checkpoints (78→66 %) and the 58 % capture. Battery‑out vs `80-9C` delivered ≈ 91 % | ✓ᵃ |
-| `0x80-92` | = `80-91` **+ 50, always** (constant 5 Wh offset) | — | ✓ᵃ |
-| `0x80-C5` | exact duplicate of `80-91` | — | ✓ᵃ |
-| `0x10-90…92` | Per‑mode tune parameters | support %, max torque (40/85 Nm), max power (600 W)… | ? |
+| `0x98‑5D` | **Motor power** | watts (direct) | ✓ |
+| `0x98‑5B` | **Rider power** | watts (direct) — matches LDI field 5 | ✓ |
+| `0x98‑14` | **Rider torque** | raw **÷ 20** = Nm — cross‑checked against LDI field 7 at **r = 1.000** (98‑14 = exactly 2× LDI‑7) | ✓ᵃ |
+| `0x98‑15` | **Motor torque** | raw **÷ 20** = Nm — **verified across two bikes**: the ride peak lands on each motor's *rated* torque (CX 85.1 → 85 Nm; SX 56.6 → 55 Nm). Also r = 0.93 with motor power. `DriveUnit.MOTOR_TORQUE` | ✓ |
+| `0x98‑1D` | **Road slope** | small ints 1–62, weak (r≈0.5) motor‑power correlation — which fits **gradient** (steeper → more assist), not the earlier "motor current" guess. Matches **`DriveUnit.ROAD_SLOPE`** in the bes3‑reader registry; exact scaling not yet pinned | ? |
+| `0x80‑9C` | **Delivered energy** | Wh (direct, monotonic; **ride Wh = last − first**) | ✓ |
+| `0x80‑88` | Battery SoC | % | ✓ |
+| `0x98‑5A` | Cadence | raw **÷ 2** = rpm. Present **only when the capture catches the bike's boot session** (see capture note); otherwise absent — gate on **LDI field 2** instead | ✓ |
+| `0x98‑08` | Speed (2nd field) | raw **÷ 100** = km/h — same speed as `98-2D`, appears **alongside** it when the boot session is caught | ✓ |
+| `0x98‑2D` | **Speed (always present)** | raw **÷ 100** = km/h — verified integrates to odometer within **0.3%** (−0.2% measured) | ✓ᵃ |
+| `0x98‑09` | Assist level | 0–4 | ✓ |
+| `0x98‑18` | Odometer | metres — matches LDI field 12 | ✓ |
+| `0x80‑E2` | **Battery total capacity** | raw **÷ 100** = Ah (2113 → **21.1 Ah** on the PowerTube 750; Nik's SX reads 1143 → 11.4 Ah) — matches **`Battery.TOTAL_CAPACITY`** in the registry. **NOT wheel circumference** (the earlier guess): it never changes with the Flow wheel setting because it isn't wheel‑related | ✓ |
+| `0x98‑29` | **Rear wheel circumference (user)** | raw **÷ 10** = mm — the Flow wheel setting itself (`0x98‑28` = OEM default; `0x98‑2F` = allowed limits). `DriveUnit.REAR_WHEEL_CIRCUMFERENCE_USER`. This is where wheel circumference actually lives (the earlier `80-E2` guess was battery capacity) | ✓ |
+| `0x98‑0C` | Assist mode names | **absent on smart system** — names arrive on `18-0D` instead | ✗ᵃ |
+| `0x18‑0D` | **Assist mode names** (configured) | string list, index = `98-09` value (e.g. OFF/ECO/TOUR+/eMTB‑shortcrank/eMTB+) | ✓ᵃ |
+| `0x98‑4E` | Assist mode **IDs** (configured slots) | string list (e.g. A100M00040, A100MSPIC7…) | ✓ᵃ |
+| `0x18‑68` | Assist mode **catalog** | all available modes, id + name pairs (ECO/ECO+/TOUR/TOUR+/SPORT/eMTB/eMTB+/TURBO/AUTO…) | ✓ᵃ |
+| `0x18‑0E` | **Per‑mode display colors** | one RGBA varint per configured mode, same order as `18-0D` (OFF = transparent; e.g. ECO `#78BE20`, TOUR+ `#00A5D8`, eMTB `#9643ED`, TURBO‑red `#E20015` — the Kiox/LED‑Remote mode colors) | ✓ᵃ |
+| `0x00‑9B` | **Battery name** | text ("PowerTube 750"); uses extended addressing `C0 80 10` before the `0A` tag | ✓ |
+| `0x98‑74` | Motor ratings | two varints, W (250/600 on BDU3740; 600/600 on Android capture) | ✓ᵃ |
+| `0xA1‑86` | Product string | text ("smart system eBike") | ✓ᵃ |
+| `0xA1‑81` | Locale | text (e.g. "en-GB") | ✓ᵃ |
+| `0x80‑8B` | **Battery pack temperature** | **°C = zigzag(raw)/10** (raw is a plain varint; a bare raw/10 reads ~2× high — zigzag‑decode first, `zigzag(n) = (n>>1) ^ -(n&1)`). Matches Bosch Flow's `presentCellTemperature` and the registry (`Battery.PRESENT_PACK_TEMPERATURE`, signed ÷10); a 60‑min charge test tracks a textbook 22.5 → 28.6 °C warm‑up. This is the **internal cell** temp, so **surface IR anchors don't apply** — the earlier surface‑IR linear fit (°C ≈ 0.35·raw − 139) is superseded for that reason | ✓ |
+| `0x80‑D2` | **Battery FET temperature** | **request‑only** (not passively streamed) — reads a plausible ~28–35 °C at `zigzag(raw)/10` (the registry's signed‑÷10). `Battery.PRESENT_FET_TEMPERATURE` | ? |
+| `0x98‑84` | **Drive‑unit PCB temperature** | **request‑only** — reads ~23–27 °C at `zigzag(raw)/10`, warmer under load. `DriveUnit.PRESENT_PCB_TEMPERATURE` | ? |
+| `0xA1‑C1` | **Remote internal battery** voltage | ~**4.185 V** (÷1000) — the remote/head‑unit's *own* cell, **not** the traction pack. `RemoteControl.INTERNAL_BATTERY_VOLTAGE`. The **only voltage readable over BLE** (pack voltage `80-8C` is USB‑only) | ? |
+| `0x80‑93` | **Max allowed discharge current** | raw is **milliamps** → **÷ 1000** = A: 60000 → **60.0 A** — a protection ceiling (a 600 W peak pulls only ~17 A). `Battery.MAXIMUM_ALLOWED_DISCHARGE_CURRENT`. Live current `80-94` is **USB‑only, refused over BLE even under load** | ✓ᵃ |
+| `0x98‑57` | **Per‑mode range estimates** | one byte per configured mode, km (e.g. `27 1f 14 10` = 39/31/20/16 km); identical to LDI field 3; recomputes with riding style, declines with SoC | ✓ᵃ |
+| `0xA2‑43` | Timer / uptime counter | **NOT temperature** | ✗ |
+| `0x80‑91` | **Remaining battery energy** | ÷ 10 = Wh. `80-88` SoC is derived from it: implied full capacity constant at **724 Wh** across 15 checkpoints (78→66 %) and the 58 % capture. Battery‑out vs `80-9C` delivered ≈ 91 % | ✓ᵃ |
+| `0x80‑92` | = `80-91` **+ 50, always** (constant 5 Wh offset) | — | ✓ᵃ |
+| `0x80‑C5` | exact duplicate of `80-91` | — | ✓ᵃ |
+| `0x10‑90…92` | Per‑mode tune parameters | support %, max torque (40/85 Nm), max power (600 W)… | ? |
 
 > **Capture note — catch the bike's power-on.** Which fields you get depends on **when you
 > subscribe**, not on hardware or firmware. Subscribe **at the bike's boot** (power-cycle the bike
@@ -181,10 +181,10 @@ match the `0x20` handshake inventory); the per‑record `f1…f5` values are a *
 recorder and are not yet field‑mapped** — decoding them is the natural next project, and needs a log
 pulled right after a ride of known profile to anchor the counters.
 
-> ⚠️ **Motor power (`0x98-5D`) is event‑pushed and OMITS ZEROS** — the motor‑off state isn't
+> ⚠️ **Motor power (`0x98‑5D`) is event‑pushed and OMITS ZEROS** — the motor‑off state isn't
 > sent. **Do not integrate it raw** for energy (you'll exceed 100% efficiency). Get energy from
-> `0x80-9C`. If you need mechanical work, **cadence‑gate** the motor stream: treat motor = 0
-> whenever cadence = 0 (Bosch is pedal‑assist only), then integrate. Cadence source: `0x98-5A`
+> `0x80‑9C`. If you need mechanical work, **cadence‑gate** the motor stream: treat motor = 0
+> whenever cadence = 0 (Bosch is pedal‑assist only), then integrate. Cadence source: `0x98‑5A`
 > when the boot session was caught, otherwise **LDI field 2** (always available).
 
 ## Bosch LDI (`char` = `eb21`)
@@ -249,7 +249,7 @@ flags (uint16 LE) · instantaneous power (sint16 LE, watts) · optional fields�
 
 Power is bytes 2–3, little‑endian signed. Optional fields (pedal balance, torque, wheel/crank
 revs → cadence) follow per the flag bits. Logged into the **same file** as the Bosch frames, so
-Bosch rider power (`0x98-5B`) and the meter can be aligned by timestamp for calibration.
+Bosch rider power (`0x98‑5B`) and the meter can be aligned by timestamp for calibration.
 
 > **First calibration result** (July 25 ride, 331 aligned samples): Bosch rider power
 > (`98-5B` / LDI field 5) averages **≈ 10 % below** the reference meter (186 W vs 205 W).

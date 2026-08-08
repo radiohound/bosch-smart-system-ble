@@ -13,8 +13,10 @@ with attribution to redundo.app.
   The parallel, independent project that reads the BES3 diagnostic data over **USB-C** to the
   drive unit and publishes the ~895-address registry (`src/address-registry.json`). His work
   and ours are complementary: his maps the USB transport (where nearly everything is readable),
-  this repo maps the **BLE** transport (where only a subset answers). We use his canonical field
-  names/addresses as the cross-reference for our BLE-reachability findings — attribution per CC BY.
+  this repo maps the **BLE** transport (where only a subset answers). Our full 161-field
+  BLE-reachable list keys its **names and descriptions** to his registry, and it **corrected
+  several of our earlier field guesses** — `98-1D` → `ROAD_SLOPE`, `80-E2` → `TOTAL_CAPACITY`
+  (not wheel circumference), `98-29` → `REAR_WHEEL_CIRCUMFERENCE_USER`. Attribution per CC BY.
 - **Nik Leiser**, of the **[BikeBridge](https://codeberg.org/bg443/BikeBridge)** project — an
   open-source Android app that reads live BLE telemetry from e-bikes and sends commands, with
   transparent access to all raw data (Shimano EP8, SRAM Eagle, and reverse-engineered parsers
@@ -28,7 +30,10 @@ with attribution to redundo.app.
 ## Cross-project confirmations
 
 The field map was cross-checked against the open community (July 2026). No contradictions
-to the verified rows; several independent confirmations:
+to the verified rows; several independent confirmations. The two most central projects —
+**Remko Weijnen's `bes3-reader`** (the USB registry we key every field name to) and **Nik
+Leiser's BikeBridge** (the HCI-snoop method + the SX captures) — are detailed above; further
+corroborations:
 
 - **Nilogax/SmartBridge** (Android + XIAO nRF52840 → Garmin) — agrees byte-for-byte on the
   `0011` channel fields.

@@ -450,8 +450,10 @@ rows**; several independent confirmations and a few new leads.
   bundles the official spec PDF — that's the authoritative source that confirmed our 13 documented
   LDI fields exactly, and confirmed there are no others in V1.0.
 - **RobbyPee/Bosch‑…‑Garmin‑Android** (`BLEdata.md`). Same `0x30` framing. First to flag **`98‑15`
-  as motor torque** (marked "possibly", ÷200) — we now confirm `98‑15` exists and tracks motor
-  power (r = 0.93), and additionally identified **`98‑14` = rider torque ÷20** which he didn't have.
+  as motor torque** (tentative, ÷200) — we now **verify** it: `98‑15` is motor torque at **÷20**,
+  confirmed on two bikes where the ride peak lands on each motor's *rated* torque (CX 85, SX 55 Nm),
+  and it correlates with motor power at r = 0.93. We additionally identified **`98‑14` = rider
+  torque ÷20** which he didn't have.
   ⚠️ **One disagreement:** he scales `98‑2D` speed **÷10** (from a single Strava match); our
   whole‑ride integration to the odometer is byte‑exact at **÷100**, so we keep ÷100 (his single
   sample was likely a low‑speed roll or coincidence).
@@ -464,9 +466,9 @@ rows**; several independent confirmations and a few new leads.
   **`driverTorque`** column, i.e. the hardware records torque even where the wire protocols hide it.
   It also showed trips can be **forged** in the local DB and sync to Bosch's cloud unvalidated.
 
-**Net:** everything on the card held up; we added `98‑14` (rider torque, r=1.000) and `98‑15`
-(motor‑torque candidate), the full channel UUIDs, and the exact spec connection rules. The one
-outside claim we reject is RobbyPee's ÷10 speed on `98‑2D`.
+**Net:** everything on the card held up; we added `98‑14` (rider torque, r=1.000) and **verified
+`98‑15` (motor torque ÷20, peak = rated on two bikes)**, the full channel UUIDs, and the exact spec
+connection rules. The one outside claim we reject is RobbyPee's ÷10 speed on `98‑2D`.
 
 ## Reading a redundo capture (`.jsonl` container)
 

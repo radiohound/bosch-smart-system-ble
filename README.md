@@ -27,7 +27,7 @@ each field labelled with a confidence marker and the evidence behind it.
 | [`docs/DECODER-CARD.md`](docs/DECODER-CARD.md) | **The decoder card** — the full field map with confidence markers, frame format, the boot-session capture insight, stored-log format, LDI + reference-meter channels, and a cross-project comparison |
 | [`docs/BLE-ACCESS.md`](docs/BLE-ACCESS.md) | **BLE reachability of Remko's ~895-address registry** — which answer over BLE (161) vs USB-only (481), the request/response grammar, and the auto-push / config-dump / poll-on-demand delivery model |
 | [`data/ble_accessibility.csv`](data/ble_accessibility.csv) | Every registry address × its BLE result (`value` / `supported-empty` / `not-available` / `command` / `passive`), keyed to Remko's `MCSP` address |
-| [`data/example-readings-cx.csv`](data/example-readings-cx.csv) | **Example capture** — every field's actual reading from one CX request-sweep (158 fields), serials/IDs masked with `x`. A concrete companion to the reachability map |
+| [`data/example-readings-cx.csv`](data/example-readings-cx.csv) | **Example capture** — every field's actual reading from one CX request-sweep (158 fields), decoded/scaled where the scaling is known (unverified ones marked *guess*), serials/IDs masked with `x`. A concrete companion to the reachability map |
 | [`data/diagnostic_fields.csv`](data/diagnostic_fields.csv) | `0x30` telemetry field IDs, scalings, confidence (channel `0011`) |
 | [`data/ldi_fields.csv`](data/ldi_fields.csv) | Bosch LDI (`eb21`) fields — documented (spec V1.0) + undocumented |
 | [`data/frame_types.csv`](data/frame_types.csv) | First-byte frame types |

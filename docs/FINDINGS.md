@@ -166,12 +166,18 @@ That motor-torque row is a two-for-one: each bike's `98-15 ÷ 20` **peak lands o
 torque** (CX 85 Nm, SX 55 Nm), which *confirms the ÷20 scaling* **and** captures the real motor
 difference in one shot.
 
-> An earlier claim of a CX/SX **speed-scaling split** (÷100 vs ÷10) is **retracted** — it came
-> from an unknown-hardware example, not a verified SX. Both our CX and this SX are ÷100.
+> **Speed scale is ÷100 on the SX too — now positively confirmed, not just retracted.** A
+> second, independent SX capture (component `BRC3100`, pack `80-E2` = 1143 → 11.4 Ah, odometer
+> 1,715 km) reads `98-2D`/`98-08` at a max raw of **1043/1003 → 10.4/10.0 km/h at ÷100**; ÷10
+> would be 104 km/h, physically impossible on an eBike. Every other scaling on that capture also
+> matched the CX (cadence ÷2 → 78 rpm, motor torque ÷20 → 33.6 Nm under the SX's 55 rated, rider
+> torque ÷20, max motor power 600 W). So the old "CX/SX speed-scaling split (÷100 vs ÷10)" is
+> dead: it traced to RobbyPee's single Strava-match on **unidentified** hardware, and two verified
+> SX captures now read ÷100. Both generations are ÷100.
 
 **Bottom line:** the physics IDs and scalings carry across generations unchanged; the real
 differences are **motor torque class, battery capacity, and the config namespace** — not the
-telemetry map. (Still N = 1 per generation — re-verify on your own drive unit.)
+telemetry map. (One CX and now **two** SX captures — re-verify on your own drive unit.)
 
 ## 6. What this does *not* show (honest limits)
 

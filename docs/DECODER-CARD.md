@@ -44,7 +44,7 @@ One JSON object per line:
 > `0000eb21-eaa2-11e9-81b4-2a2ae2dbcce4` — **both share the same `…-eaa2-11e9-81b4-2a2ae2dbcce4`
 > vendor base**, so `0011` and `eb21` are two characteristics under Bosch's one BLE service tree.
 
-### File layouts (three export styles, one decoder)
+### File layouts (three export styles)
 
 | file | keys | channel(s) |
 |------|------|-----------|
@@ -52,18 +52,9 @@ One JSON object per line:
 | **iPhone diagnostic** `bosch-diag.jsonl` | `t, raw, note, gps_speed_kmh` | diagnostic `0x0011` only (no `char`) |
 | **iPhone LDI corpus** `bosch-<yyyymmdd>.jsonl` | `t_wall (ms), raw_hex, decoded, ok, ctx` | LDI `eb21` only |
 
-**Decoder — `decode_capture.py`.** Reads all three styles: it detects each line's channel (from the
-`char` tag or the `raw`/`raw_hex` shape), labels every field from the maps below, and prints a ride
-summary — motor peak/mean, delivered Wh, cadence‑gated efficiency, and decimal SoC (from `80‑91`,
-self‑calibrated pack capacity). Pass an iPhone **diagnostic and LDI file together** and it uses the
-LDI cadence (field 2) to gate the motor integral when the diagnostic channel's own cadence (`98‑5A`)
-wasn't captured — the boot‑session case below.
-
-```
-python3 decode_capture.py capture.jsonl [more.jsonl ...]   # labelled fields + ride summary
-python3 decode_capture.py --fields capture.jsonl           # every id, incl. unknowns
-python3 decode_capture.py --csv out.csv capture.jsonl      # per-sample merged CSV
-```
+Each style is plain JSONL — one notification per line — so any parser can read the `raw`/`raw_hex`
+hex against the field maps below. To gate motor energy on cadence when the diagnostic channel's own
+cadence (`98‑5A`) wasn't in the capture (the boot‑session case below), fall back to **LDI field 2**.
 
 ## Frame types (first byte of `raw`)
 

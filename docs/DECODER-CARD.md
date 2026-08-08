@@ -425,6 +425,19 @@ Bosch rider power (`0x98‑5B`) and the meter can be aligned by timestamp for ca
 Compared our map with the open reverse‑engineering community. **No contradictions to our verified
 rows**; several independent confirmations and a few new leads.
 
+- **Remko Weijnen / [`bes3-reader`](https://github.com/rweijnen/bosch-bes3-reader)** (USB‑C /
+  WebUSB, CC BY 4.0) — the **canonical field‑name registry**: all ~895 BES3 datapoint names and
+  addresses, read over the wired **USB** diagnostic port. It's the *other transport* — Remko maps
+  everything reachable over USB; this card maps which of those answer over **BLE**, and how. We key
+  every name in the [full 161 list](#full-ble-reachable-field-list-all-161) to his registry, and it
+  **corrected several of our earlier guesses**: `98‑1D` → `ROAD_SLOPE`, `80‑E2` → `TOTAL_CAPACITY`
+  (not wheel circumference), `98‑29` → `REAR_WHEEL_CIRCUMFERENCE_USER`. No BLE‑vs‑USB
+  contradictions where the transports overlap.
+- **BikeBridge — Nik Leiser** ([codeberg.org/bg443/BikeBridge](https://codeberg.org/bg443/BikeBridge),
+  Android live BLE telemetry + commands). Independently reads the same `0011` channel. Contributed
+  the **HCI‑snoop capture method** that exposed the phone→bike **write channel**, and the
+  **Performance Line SX** captures behind our CX↔SX comparison — confirming the physics IDs and
+  scalings carry across generations.
 - **Nilogax/SmartBridge** (Android + XIAO nRF52840 → Garmin). Decodes the same `0011` channel and
   agrees byte‑for‑byte: `98‑5B` rider W, `98‑5D` motor W, `98‑5A` cadence ÷2, `80‑88` SoC,
   `98‑09` assist 0–4, `98‑18` odometer. It reads speed off **`98‑08`** (we use the always‑present

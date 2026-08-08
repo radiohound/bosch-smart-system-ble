@@ -1,18 +1,20 @@
-# Decoder Card — reading the export log
+# Decoder Card — Bosch Smart System BLE format & field reference
 
-What each line of the exported `.jsonl` means, and the Bosch field map. This card carries **two
-layers**: the **verified field map** (below) — the fields we've byte-confirmed with scaling and
-evidence — and the **[full BLE-reachable list](#full-ble-reachable-field-list-all-161)** — **all
-161** addresses that return data over BLE, most read-but-not-yet-verified.
-Decode by **redundo.app**. Confidence markers: **✓** verified byte‑exact on a BDU3740 · **✓ᵃ**
+The **format specification** and **field reference** for the Bosch Smart System's BLE data: the
+on‑wire frame format, the `.jsonl` capture layout, and what every field means. It is a reference,
+not a tool — any parser can implement it. Two field layers: the **verified field map** (below) —
+fields byte‑confirmed with scaling and evidence — and the
+**[full BLE-reachable list](#full-ble-reachable-field-list-all-161)** — **all 161** addresses that
+return data over BLE, most read‑but‑not‑yet‑verified.
+By **redundo.app**. Confidence markers: **✓** verified byte‑exact on a BDU3740 · **✓ᵃ**
 verified byte‑exact on the Android capture (smart system BDU3740 / Performance Line CX, fw 20.x) · **?**
 plausible but unconfirmed · **◐** read over BLE, scaling not yet verified · **✗** debunked (was a guess, proven wrong).
 
 ---
 
-## The log line
+## Capture format
 
-One JSON object per line:
+A capture is **JSONL** — one BLE notification per line:
 
 ```json
 {"t": 1785035528.746, "char": "00000011", "note": "eco climb", "raw": "30049809..."}

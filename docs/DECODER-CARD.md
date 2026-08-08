@@ -1,8 +1,8 @@
 # Decoder Card — Bosch Smart System BLE format & field reference
 
 The **format specification** and **field reference** for the Bosch Smart System's BLE data: the
-on‑wire frame format, the `.jsonl` capture layout, and what every field means. It is a reference,
-not a tool — any parser can implement it. Two field layers: the **verified field map** (below) —
+on‑wire frame format and what every field means. It is a reference, not a
+tool — any parser can implement it, against a capture from any sniffer. Two field layers: the **verified field map** (below) —
 fields byte‑confirmed with scaling and evidence — and the
 **[full BLE-reachable list](#full-ble-reachable-field-list-all-161)** — **all 161** addresses that
 return data over BLE, most read‑but‑not‑yet‑verified.

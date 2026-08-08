@@ -17,9 +17,7 @@ plausible but unconfirmed · **◐** read over BLE, scaling not yet verified · 
 This is the device-intrinsic layer — what the Bosch Smart System actually puts on the wire,
 decodable from **any** capture (nRF Connect, an Android HCI-snoop log, Wireshark, your own app), no
 particular tool required. A single BLE notification packs several length-prefixed frames; the first
-byte of each is its type. *(If you're reading a `.jsonl` file exported by redundo's own tools, that
-container layout is documented in [Reading a redundo capture](#reading-a-redundo-capture-jsonl-container)
-at the end — it's optional; the maps below decode the wire directly.)*
+byte of each is its type.
 
 | type | meaning |
 |------|---------|
@@ -121,10 +119,9 @@ region config "20mph_US-CA-NZ".
 
 ### Stored‑log files (`0x60`/`0x70` transfer → the `.bin` set)
 
-When a capture **catches the bike's boot session** the `0x60`/`0x70` file transfer runs, and Redundo
-drops a set of `.bin` files **next to** the `.jsonl` capture (the "untitled folder" export is the
-worked example: `bosch-diag.jsonl` + `bosch-20260725.jsonl` + three `.bin`). They are the bike's
-on‑board flight recorder — the same logs a Bosch service tool downloads — as raw protobuf.
+When a capture **catches the bike's boot session**, the `0x60`/`0x70` file transfer runs and emits a
+set of `.bin` files — an index plus one log per component (a worked example produced three). They are
+the bike's on‑board flight recorder — the same logs a Bosch service tool downloads — as raw protobuf.
 
 **The index — `foldercontent.bin`.** A protobuf directory listing, one entry per stored file:
 

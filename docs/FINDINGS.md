@@ -147,13 +147,13 @@ the config namespace actually differ.**
 | speed `98-2D` (÷100) | 2.5–60.9 km/h | 2.5–25 km/h |
 | max motor power `98-74` | 600 W | 600 W |
 
-Every mover streams on **both** drive units' `0x0011` channel with the **same ID and scaling**.
+Every moving field streams on **both** drive units' `0x0011` channel with the **same ID and scaling**.
 With both captures riding there are **zero SX-only telemetry IDs** — the earlier impression that
 "the SX doesn't stream torque/cadence" was a *parked-vs-riding* artifact (from a Flow capture
 that simply didn't subscribe to them). The SX carries torque and cadence on the diagnostic
 channel exactly like the CX.
 
-**Full field-set cross-check.** Beyond the movers, we diffed *every* `0x30` id in a CX boot
+**Full field-set cross-check.** Beyond the moving fields, we diffed *every* `0x30` id in a CX boot
 capture against a fresh SX capture — 281 field ids shared. Crucially, **none of the SX-unique ids
 are sensors**: they are all `0x20` component-inventory / handshake frames (different part numbers)
 plus one state flag, `A0-51 DIAGNOSIS_PROGRAM_ACTIVE` (the SX was in diagnosis mode during

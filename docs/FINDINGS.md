@@ -153,6 +153,13 @@ With both captures riding there are **zero SX-only telemetry IDs** — the earli
 that simply didn't subscribe to them). The SX carries torque and cadence on the diagnostic
 channel exactly like the CX.
 
+**Full field-set cross-check.** Beyond the movers, we diffed *every* `0x30` id in a CX boot
+capture against a fresh SX capture — 281 field ids shared. Crucially, **none of the SX-unique ids
+are sensors**: they are all `0x20` component-inventory / handshake frames (different part numbers)
+plus one state flag, `A0-51 DIAGNOSIS_PROGRAM_ACTIVE` (the SX was in diagnosis mode during
+capture). No CX telemetry field is missing on the SX, and the SX exposes no telemetry field the CX
+lacks — the map is the same, end to end.
+
 **The genuine differences — two hardware specs + the namespace:**
 
 | aspect | CX (BDU3740) | SX (Nik's) |

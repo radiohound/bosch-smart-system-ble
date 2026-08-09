@@ -24,6 +24,19 @@ So only **~263 of ~895** answer with anything over BLE; **481 are USB-only.** Se
 are also pushed passively** (the `passive_stream` column) — you receive those for free without
 asking.
 
+> **The parked sweep undercounts: 161 answer a request, but 182 actually report data.** These
+> counts come from a *stationary* bike, so anything that only exists during a ride reads
+> `supported-empty`. Mining every logged ride capture, **21 of the 102 `supported-empty` fields
+> return real data while moving** — so the true "reports data" count is **161 + 21 = 182**. The 21:
+> the **8 live movers** (motor/rider power, both torques, cadence, both speeds, assist mode —
+> nothing to report at a standstill); the **9-field `A2-4x` activity summary** — `A2-4A/4B` avg/max
+> rider power, `A2-48/49` avg/max cadence (÷2), `A2-46` avg speed (÷100), `A2-51` calories,
+> `A2-43` moving time, `A2-56` trick stats, and **`A2-54 RIDER_ENERGY_SHARE`** — the bike's own
+> rider-vs-motor split, validated to within **1–2%** of the integrated `98-5B`/`98-5D` energy (see
+> the decoder card); plus charging-active (`80-8A`/`80-C4`), walk-assist status (`98-6A`), and the
+> Kiox tiles string (`8D-23`). The `A2-4x` family auto-pushes sparsely and resets per activity —
+> use the settled late-ride values.
+
 > **The electrical internals are USB-only.** Pack cell voltage (`80-8C`), live discharge
 > current (`80-94` / `80-C8`), and last-end-of-charge voltage (`80-9E`) all return
 > **not-available** over BLE — and stay that way **even under load** (re-tested at up to 263 W

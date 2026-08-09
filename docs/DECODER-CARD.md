@@ -443,7 +443,11 @@ rows**; several independent confirmations and a few new leads.
   every name in the [full 161 list](#full-ble-reachable-field-list-all-161) to his registry, and it
   **corrected several of our earlier guesses**: `98‑1D` → `ROAD_SLOPE`, `80‑E2` → `TOTAL_CAPACITY`
   (not wheel circumference), `98‑29` → `REAR_WHEEL_CIRCUMFERENCE_USER`. No BLE‑vs‑USB
-  contradictions where the transports overlap.
+  contradictions where the transports overlap. His repo also carries a BLE transport, but it's
+  reconstructed from decompiling Bosch's Flow app and — by his own note — unconfirmed on hardware,
+  where this card's BLE map comes from live HCI‑snoop captures verified on a real bike. So on the
+  BLE side the two projects are independent and reached by different methods: his inferred from the
+  app, ours observed on the wire.
 - **BikeBridge — Nik Leiser** ([codeberg.org/bg443/BikeBridge](https://codeberg.org/bg443/BikeBridge),
   Android live BLE telemetry + commands). Independently reads the same `0011` channel. Contributed
   the **HCI‑snoop capture method** that exposed the phone→bike **write channel**, and the

@@ -16,7 +16,9 @@ with attribution to redundo.app.
   this repo maps the **BLE** transport (where only a subset answers). Our full 161-field
   BLE-reachable list keys its **names and descriptions** to his registry, and it **corrected
   several of our earlier field guesses** — `98-1D` → `ROAD_SLOPE`, `80-E2` → `TOTAL_CAPACITY`
-  (not wheel circumference), `98-29` → `REAR_WHEEL_CIRCUMFERENCE_USER`. Attribution per CC BY.
+  (not wheel circumference), `98-29` → `REAR_WHEEL_CIRCUMFERENCE_USER`. His repo also includes a BLE transport, but one reconstructed
+  from decompiling Bosch's Flow app and unconfirmed on hardware; this repo's BLE map is derived
+  independently, from live HCI-snoop captures on a real bike. Attribution per CC BY.
 - **Nik Leiser**, of the **[BikeBridge](https://codeberg.org/bg443/BikeBridge)** project — an
   open-source Android app that reads live BLE telemetry from e-bikes and sends commands, with
   transparent access to all raw data (Shimano EP8, SRAM Eagle, and reverse-engineered parsers

@@ -35,12 +35,13 @@ each field labelled with a confidence marker and the evidence behind it.
 | [`data/component_inventory.csv`](data/component_inventory.csv) | Example component inventory from a capture |
 | [`data/fields.json`](data/fields.json) | All of the above as one machine-readable file |
 
-## TL;DR
+## Summary
 
 - **Three ways in — this map is the BLE diagnostic one.** The deep component data has two
   transports: **USB-C** to the drive unit — Remko Weijnen's
   [`bes3-reader`](https://github.com/rweijnen/bosch-bes3-reader) documents all ~895 addresses
-  that way — and the **BLE diagnostic channel** `0x0011`, the focus here. Bosch's official
+  that way (his repo also carries an unconfirmed, decompile-derived BLE transport; the
+  hardware-verified BLE map is here) — and the **BLE diagnostic channel** `0x0011`, the focus here. Bosch's official
   **LDI** `eb21` is the third (telemetry only). Our contribution is the BLE half: of Remko's
   ~895 addresses, **which you can actually reach over Bluetooth, and how** (161 answer, ~481
   refuse — the rest is USB-only).

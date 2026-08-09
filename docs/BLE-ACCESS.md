@@ -24,10 +24,13 @@ So only **~263 of ~895** answer with anything over BLE; **481 are USB-only.** Se
 are also pushed passively** (the `passive_stream` column) — you receive those for free without
 asking.
 
-> **The parked sweep undercounts: 161 answer a request, but 182 actually report data.** These
-> counts come from a *stationary* bike, so anything that only exists during a ride reads
-> `supported-empty`. Mining every logged ride capture, **21 of the 102 `supported-empty` fields
-> return real data while moving** — so the true "reports data" count is **161 + 21 = 182**. The 21:
+> **The request-sweep counts 161; another 21 report only by auto-push → 182 report data.** The
+> sweep *requests* each address — run both parked **and under load** (riding at up to ~24 km/h,
+> ~310 W motor) — and 161 answer. But **21 of the 102 `supported-empty` fields return
+> `supported-empty` to a request *even while moving*** — they're **push-only**: they auto-push their
+> values but never answer a poll, so a request-sweep can't see them. Mining every logged ride
+> capture (up to a 206‑min ride) surfaces all 21 in the passive stream, so the true "reports data"
+> count is **161 + 21 = 182**. The 21:
 > the **8 live movers** (motor/rider power, both torques, cadence, both speeds, assist mode —
 > nothing to report at a standstill); the **9-field `A2-4x` activity summary** — `A2-4A/4B` avg/max
 > rider power, `A2-48/49` avg/max cadence (÷2), `A2-46` avg speed (÷100), `A2-51` calories,

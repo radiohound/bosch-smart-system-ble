@@ -368,8 +368,9 @@ request-only.
 
 ### Ride-only reporters (21 — auto-push while moving)
 
-These answer `supported-empty` to a *parked* request but stream real data once the bike is moving,
-so a stationary sweep misses them. Counting these, **182 fields report data** (161 by request + 21).
+These return `supported-empty` to a direct request — **even while moving** — but auto-push real data
+in the passive stream. They're **push-only** (they stream but don't answer a poll), so a
+request-sweep can't see them. Counting these, **182 fields report data** (161 by request + 21).
 The `A2‑4x` set is the bike's **native activity summary** (auto-pushes sparsely, per-activity — use
 late-ride values); `A2‑54` is validated to ±1–2% of the integrated power split.
 

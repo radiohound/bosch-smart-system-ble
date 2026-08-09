@@ -28,7 +28,15 @@ A1-81,Locale,text,verified_android,"e.g. ""en-GB"""
 A1-C1,Remote internal battery voltage,raw / 1000 = V,candidate,~4.185V; remote's own cell NOT traction pack; only voltage readable over BLE; RemoteControl.INTERNAL_BATTERY_VOLTAGE
 80-93,Max allowed discharge current,raw / 1000 = A (mA),verified_android,60000->60.0A protection ceiling; live current 80-94 is USB-only refused over BLE; Battery.MAXIMUM_ALLOWED_DISCHARGE_CURRENT
 98-57,Per-mode range estimates,one byte/mode (km),verified_android,identical to LDI field 3; declines with SoC
-A2-43,Timer / uptime counter,n/a,debunked,NOT temperature
+A2-43,Activity moving time,DURATION_WITHOUT_STOPS_OF_ACTIVITY (unit TBD),candidate,"un-debunked (was wrongly ""not temperature""); auto-pushes during rides"
+A2-54,Rider energy share,% of total propulsion energy from rider,verified_android,"native rider-vs-motor split; whole-ride value matches integral 98-5B/(98-5B+cadence-gated 98-5D) within 1-2% on 3 rides (44~43%,36~37%,36~35%); converges over ride"
+A2-4A,Average rider power (activity),watts (= 98-5B scale),verified_android,e.g. 181 W
+A2-4B,Maximum rider power (activity),watts,verified_android,e.g. 478 W
+A2-48,Average cadence (activity),raw / 2 = rpm (= 98-5A),verified_android,174 -> 87 rpm
+A2-49,Maximum cadence (activity),raw / 2 = rpm,verified_android,252 -> 126 rpm
+A2-46,Average speed (activity),raw / 100 = km/h (= 98-2D),verified_android,2087 -> 20.9 km/h
+A2-51,Calories consumed (activity),kcal (Bosch estimate),candidate,101-184 seen; estimate method/accuracy not validated
+A2-56,Trick stats,jump/trick detection,candidate,reads 1/2 on some rides; count-vs-enum unconfirmed
 80-91,Remaining battery energy,raw / 10 = Wh,verified_android,implied full capacity 724 Wh; battery-out vs 80-9C ~91%
 80-92,= 80-91 + 50 always,constant 5 Wh offset,verified_android,
 80-C5,exact duplicate of 80-91,n/a,verified_android,

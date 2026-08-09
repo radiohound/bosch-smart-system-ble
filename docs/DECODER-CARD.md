@@ -89,7 +89,20 @@ Telemetry arrives on three BLE characteristics, all under Bosch's one vendor ser
 | `0xA1‑C1` | **Remote internal battery** voltage | ~**4.185 V** (÷1000) — the remote/head‑unit's *own* cell, **not** the traction pack. `RemoteControl.INTERNAL_BATTERY_VOLTAGE`. The **only voltage readable over BLE** (pack voltage `80-8C` is USB‑only) | ? |
 | `0x80‑93` | **Max allowed discharge current** | raw is **milliamps** → **÷ 1000** = A: 60000 → **60.0 A** — a protection ceiling (a 600 W peak pulls only ~17 A). `Battery.MAXIMUM_ALLOWED_DISCHARGE_CURRENT`. Live current `80-94` is **USB‑only, refused over BLE even under load** | ✓ᵃ |
 | `0x98‑57` | **Per‑mode range estimates** | one byte per configured mode, km (e.g. `27 1f 14 10` = 39/31/20/16 km); identical to LDI field 3; recomputes with riding style, declines with SoC | ✓ᵃ |
-| `0xA2‑43` | Timer / uptime counter | **NOT temperature** | ✗ |
+| `0xA2‑43` | **Activity moving time** | `DURATION_WITHOUT_STOPS_OF_ACTIVITY` — ride time excluding stops. **Corrects the earlier "not temperature ✗" debunk** — it's a real field, auto‑pushes during rides; value unit not yet pinned | ◐ |
+| `0xA2‑54` | **Rider energy share** | **% of total propulsion energy contributed by the rider** — the bike's *native* rider‑vs‑motor split. Validated: the whole‑ride value matches ∫`98‑5B` ÷ (∫`98‑5B` + cadence‑gated ∫`98‑5D`) within **1–2%** on three rides (44≈43%, 36≈37%, 36≈35%). Converges as energy accumulates — use the late/final value. `RemoteControl.RIDER_ENERGY_SHARE` | ✓ᵃ |
+| `0xA2‑4A` | **Average rider power** (activity) | watts, same scale as `98‑5B` — e.g. 181 W | ✓ᵃ |
+| `0xA2‑4B` | **Maximum rider power** (activity) | watts — e.g. 478 W | ✓ᵃ |
+| `0xA2‑48` | **Average cadence** (activity) | raw **÷ 2** = rpm (same as `98‑5A`) — 174 → 87 rpm | ✓ᵃ |
+| `0xA2‑49` | **Maximum cadence** (activity) | raw **÷ 2** = rpm — 252 → 126 rpm | ✓ᵃ |
+| `0xA2‑46` | **Average speed** (activity) | raw **÷ 100** = km/h (same as `98‑2D`) — 2087 → 20.9 km/h | ✓ᵃ |
+| `0xA2‑51` | **Calories consumed** (activity) | kcal — Bosch's own estimate (101–184 seen); estimate method/accuracy not validated | ◐ |
+| `0xA2‑56` | **Trick stats** | jump/trick detection — reads small counts (1, 2) on some rides; count‑vs‑enum meaning unconfirmed | ? |
+
+> **The `A2‑4x` family is the bike's native activity summary.** It auto‑pushes *sparsely* during a ride
+> (tens of frames, at intervals/transitions — not per second) and is per‑activity (resets each ride). So
+> avg/max rider power, avg/max cadence, avg speed, calories, moving time, energy share, and trick stats
+> all come for free in the passive stream, but you want the settled late‑ride values.
 | `0x80‑91` | **Remaining battery energy** | ÷ 10 = Wh. `80-88` SoC is derived from it: implied full capacity constant at **724 Wh** across 15 checkpoints (78→66 %) and the 58 % capture. Battery‑out vs `80-9C` delivered ≈ 91 % | ✓ᵃ |
 | `0x80‑92` | = `80-91` **+ 50, always** (constant 5 Wh offset) | — | ✓ᵃ |
 | `0x80‑C5` | exact duplicate of `80-91` | — | ✓ᵃ |

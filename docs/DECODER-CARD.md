@@ -4,8 +4,9 @@ The **format specification** and **field reference** for the Bosch Smart System'
 on‑wire frame format and what every field means. It is a reference, not a
 tool — any parser can implement it, against a capture from any sniffer. Two field layers: the **verified field map** (below) —
 fields byte‑confirmed with scaling and evidence — and the
-**[full BLE-reachable list](#full-ble-reachable-field-list-all-161)** — **all 161** addresses that
-return data over BLE, most read‑but‑not‑yet‑verified.
+**[full BLE-reachable list](#full-ble-reachable-field-list-all-161)** — **161** addresses answer a
+request, plus **21 more that report only while riding → 182 report data** (incl. the bike's native
+`A2‑4x` activity summary); most read‑but‑not‑yet‑verified.
 By **redundo.app**. Confidence markers: **✓** verified byte‑exact on a BDU3740 · **✓ᵃ**
 verified byte‑exact on the Android capture (smart system BDU3740 / Performance Line CX, fw 20.x) · **?**
 plausible but unconfirmed · **◐** read over BLE, scaling not yet verified · **✗** debunked (was a guess, proven wrong).
@@ -182,7 +183,7 @@ one (e.g. `zigzag/10 °C`, `÷100 Ah`); a bare unit or `—` = raw. **Descriptio
 `bes3-reader` registry description (CC BY 4.0). **Stream:** *auto* = pushed passively · *req* =
 request-only.
 
-*19 verified · 142 read-but-unverified · 161 reachable total.*
+*19 verified · 142 read-but-unverified · 161 reachable **by request** — plus **21 ride-only reporters** (below) that only stream while moving = **182 fields report data**.*
 
 ### DriveUnit (60)
 
@@ -364,6 +365,41 @@ request-only.
 | `8D‑84` | HEAD_UNIT_STATIC_FEATURE_PROPERTIES | — | — | auto | ◐ |
 | `8D‑85` | SUPPORTED_TILE_IDS | — | — | req | ◐ |
 | `8D‑8A` | SUPPORTED_TILE_SIZES | — | — | req | ◐ |
+
+### Ride-only reporters (21 — auto-push while moving)
+
+These answer `supported-empty` to a *parked* request but stream real data once the bike is moving,
+so a stationary sweep misses them. Counting these, **182 fields report data** (161 by request + 21).
+The `A2‑4x` set is the bike's **native activity summary** (auto-pushes sparsely, per-activity — use
+late-ride values); `A2‑54` is validated to ±1–2% of the integrated power split.
+
+| id | field | unit / scaling | conf |
+|----|-------|----------------|:----:|
+| `98‑5D` | Motor power | W | ✓ |
+| `98‑5B` | Rider power | W | ✓ |
+| `98‑15` | Motor torque | ÷20 = Nm | ✓ |
+| `98‑14` | Rider torque | ÷20 = Nm | ✓ |
+| `98‑5A` | Rider cadence | ÷2 = rpm | ✓ |
+| `98‑2D` | Displayed bike speed | ÷100 = km/h | ✓ |
+| `98‑08` | Bike speed | ÷100 = km/h | ✓ |
+| `98‑09` | Assist mode/level | 0–4 | ✓ |
+| `A2‑54` | **Rider energy share** | % — native rider/motor split (±1–2% vs integrated power) | ✓ᵃ |
+| `A2‑4A` | Average rider power | W | ✓ᵃ |
+| `A2‑4B` | Maximum rider power | W | ✓ᵃ |
+| `A2‑48` | Average cadence | ÷2 = rpm | ✓ᵃ |
+| `A2‑49` | Maximum cadence | ÷2 = rpm | ✓ᵃ |
+| `A2‑46` | Average speed | ÷100 = km/h | ✓ᵃ |
+| `A2‑51` | Calories consumed | kcal (Bosch estimate) | ◐ |
+| `A2‑43` | Activity moving time | unit TBD | ◐ |
+| `A2‑56` | Trick stats | count/enum | ? |
+| `98‑6A` | Walk-assist status | enum | ◐ |
+| `80‑8A` | Charging active | bool | ◐ |
+| `80‑C4` | Instance charging active | bool | ◐ |
+| `8D‑23` | Streaming tiles of interest | string (Kiox) | ◐ |
+
+*(Separately, exactly one `not-available` field also leaks one-way: `80‑AF ISSUE_VISUALIZATION_EVENT`,
+a rare battery error string. The electrical internals — pack voltage `80‑8C`, discharge current
+`80‑94`/`80‑C8` — never appear even one-way, confirming they're USB-only.)*
 
 ## Bosch LDI (`char` = `eb21`)
 

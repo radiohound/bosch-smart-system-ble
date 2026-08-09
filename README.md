@@ -43,8 +43,8 @@ each field labelled with a confidence marker and the evidence behind it.
   that way (his repo also carries an unconfirmed, decompile-derived BLE transport; the
   hardware-verified BLE map is here) — and the **BLE diagnostic channel** `0x0011`, the focus here. Bosch's official
   **LDI** `eb21` is the third (telemetry only). Our contribution is the BLE half: of Remko's
-  ~895 addresses, **which you can actually reach over Bluetooth, and how** (161 answer, ~481
-  refuse — the rest is USB-only).
+  ~895 addresses, **which you can actually reach over Bluetooth, and how** (161 answer a request,
+  ~481 refuse; **21 more report only while riding → 182 report data** — the rest is USB-only).
 - **Two BLE surfaces, one vendor tree.** Both live under Bosch's base
   `0000xxxx-eaa2-11e9-81b4-2a2ae2dbcce4`: the **diagnostic channel** `0x0011` (the rich
   `0x30` telemetry) and the officially documented **LDI** `eb21`.
@@ -56,6 +56,11 @@ each field labelled with a confidence marker and the evidence behind it.
   (`98-2D`, integrates to odometer within 0.3%), delivered energy in Wh (`80-9C`), remaining
   energy ÷10 Wh (`80-91`), battery temp `zigzag(raw)/10` °C (`80-8B`), motor torque ÷20 N·m
   (`98-15`, peak = rated on two bikes). Any remaining candidates are marked as such.
+- **The bike keeps its own ride summary.** Beyond the request-reachable 161, **21 fields report
+  only while moving** (→ **182 report data**) — including the native `A2-4x` activity summary:
+  avg/max rider power, avg/max cadence, avg speed, calories, moving time, trick stats, and
+  **`A2-54 RIDER_ENERGY_SHARE`** — the bike's own rider-vs-motor energy split, validated to **±1–2%**
+  of the integrated power. All auto-pushed for free in the passive stream.
 - **Catch the bike's boot.** Which fields you get depends on *when you subscribe*, not the
   hardware — subscribe at power-on for the full set (both speed fields, cadence, and the
   stored-log transfer); join mid-session and you get a reduced set. Full note in the card.

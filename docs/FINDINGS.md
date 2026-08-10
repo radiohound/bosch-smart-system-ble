@@ -34,7 +34,9 @@ voltage, live discharge current — stay USB-only, even under load). So: his reg
 "what exists" map over USB; this repo is the "what you can reach over Bluetooth, and how" map.
 
 This write-up is mostly about that second, undocumented **BLE** channel — what its data means, and
-how we proved each field rather than guessing.
+how we proved each field rather than guessing. It also, in **§6**, follows that channel into the
+**navigation display** — decoding the vector-map-tile protocol well enough to author our own tiles,
+and mapping the exact cryptographic boundary that stops third parties from *displaying* them.
 
 Scope is deliberately honest: **one bike, deeply verified** — a **smart system (gen 4) Performance
 Line CX** (BDU3740, PowerTube 750, fw 20.x) — cross-checked against Bosch's own Flow app, an
@@ -186,7 +188,89 @@ difference in one shot.
 differences are **motor torque class, battery capacity, and the config namespace** — not the
 telemetry map. (One CX and now **two** SX captures — re-verify on your own drive unit.)
 
-## 6. What this does *not* show (honest limits)
+## 6. The navigation display: authoring our own map tiles — and the wall
+
+The same `0x0011` channel carries more than telemetry. When the Flow app navigates, it **draws the
+map on the Kiox display itself** — the head unit has no onboard maps; the phone streams the picture
+over BLE. We set out to understand that well enough to send *our own* map, and got most of the way:
+**we can author map tiles the bike accepts, byte-for-byte — but making them actually display is
+gated by cryptography we can't (and shouldn't try to) forge.** Both halves are worth publishing,
+the second especially. *(The full byte-level spec — frames, tile schema, coordinate math, handshake
+— is in **[NAV-PROTOCOL.md](NAV-PROTOCOL.md)**; this section is the narrative.)*
+
+**The map is vector tiles, pushed as RPC frames.** Alongside the `0x30` telemetry frames, the nav
+system uses **command/RPC frames** — `30 <len> 40 80 <idHi> <idLo> <typeSeq> …` — on the same
+characteristic. The one that carries the map is `8D-2B` **`SET_TILE_CONTENT`**. We decoded its
+format two independent ways and they agree exactly: (a) byte-by-byte against a real Flow→Kiox HCI
+capture, and (b) against Flow's **own encoder**, recovered by decompiling the app (`com.bosch.ebike`
+is native Kotlin, so `jadx` reads it cleanly; the class `TileConversionKt` is the map encoder). The
+model, **VERIFIED**:
+
+```
+SetTileContent{ 1: TilePosition[], 2: TileContent }
+TileContent    { 1: tileIndex, 2: Layer[] }
+Layer          { 1: styleIndex, 2: Shape[] }          # styleIndex → a style table sent once
+Shape          { 1: RelativePoint[] }
+RelativePoint  { 1: x, 2: y }                          # absolute 0..159 px in the tile; a 0 coord is omitted
+```
+
+Colors come from a **style table** the phone sends first (a list of `{ARGB color, lineWidth}`);
+layers reference it by index. In practice **style 0 = white = the route** (Bosch's "trail" layer —
+in trail-navigation the trail *is* your route) and **style 1 = grey = the surrounding roads**. A
+tile is a `160×160` px vector image; the Kiox displays roughly one tile and pre-loads a 3×3 ring
+around it for scrolling.
+
+**The keystone — the coordinate system.** Each tile is placed by an `AbsolutePoint`, and cracking
+what that means is what turns "replay Bosch's bytes" into "author our own map anywhere." It is a
+**standard Web-Mercator (OSM slippy-map) tile coordinate at zoom 18, times 160** — **VERIFIED**
+against the ride's GPX to a ratio of 1.0000:
+
+```
+tileX = (lon + 180)/360 · 2^18
+tileY = (1 − ln(tan(lat) + sec(lat))/π)/2 · 2^18
+AbsolutePoint = (tileX · 160, tileY · 160)
+a road vertex's local pixel = frac(tileIndex) · 160        # 0..159 within its tile
+```
+
+So from any latitude/longitude you can compute the tile, its on-screen position, and where each
+road vertex lands inside it — no lookup table, no captured coordinates.
+
+**It's pull-based, and it accepts what we author.** The head unit drives the exchange: it
+advertises which tiles it wants via `8D-23` `FEATURE_STREAMING_TILES_OF_INTEREST`, the phone
+declares the feature (an `8D-26` option group), and content is only accepted for the slots the
+display asked for. We built the whole set ourselves — style table, tile enumeration, position table
+(from the Mercator math above), and content (a route line plus a road drawn from two real lat/lon
+points) — and the bike **structurally accepts every frame**: reply `0d2b c080 … ` with **zero
+rejects**, the same acceptance shape Flow's own frames get. The encoding is fully reproducible from
+first principles; nothing is copied. *(One malformed-frame lesson worth recording: `SetTileContent`
+puts the position/enumeration list on field 1 and the tile content on field 2 — content needs the
+extra message wrapper, and omitting it is the difference between acceptance and a silent `…08`
+reject.)*
+
+**The wall — and why it's a real boundary, not a missing decode. NEGATIVE (by design).** Accepted
+tiles come back marked *not displayed* (`…1000` vs Flow's `…1001`) because they only render on a
+live **map canvas**, and the Kiox opens one only inside an **authenticated navigation session**.
+Selecting a destination triggers a **certificate exchange** — BER-TLV `7F21` cert with `5F24/5F25`
+validity dates, `5F34` sequence, `5F37` signature — i.e. a Bosch-CA-signed credential, mutually
+verified (the head unit stores a `RemoteControl.publicKeyType`; the bus has a dedicated `bes3`
+`Signature` message). This is the same gate that **denies** `DISPLAY_GENERIC_TEXT` to third parties.
+And decompiling Flow confirms the credential is **not extractable**: its `securestore` holds key
+material in the **Android hardware Keystore** (`KeyGenParameterSpec` / TEE-StrongBox), the code
+*uses* the private key but never contains it, and the trust root is **Bosch's CA** — a keypair we
+generate ourselves is rejected. So the authorization is deliberately engineered to be non-forgeable,
+and it works.
+
+**Net result:** the Bosch navigation-tile protocol is fully understood and reproducible up to the
+security boundary — **you can build the exact bytes of your own map; you cannot make the display
+show them without Bosch's cryptographic authorization.** That negative is the useful finding: it
+tells anyone chasing "custom screens on a Kiox" exactly where the line is and why it holds.
+
+> **Note on this section vs the rest.** Everything above about the tile *format* and *coordinates*
+> is verified on hardware and against Flow's own code. The auth wall is characterized from the
+> handshake and the decompiled key-storage — we did not attempt to break it, and by design it
+> can't be reverse-engineered around from the client alone.
+
+## 7. What this does *not* show (honest limits)
 
 - The `0x0011` stream is the drive unit's **output**, not a two-sided mirror — we never see the
   head unit *requesting* a field, because those requests run on the internal wired bus, off-BLE.
@@ -194,7 +278,7 @@ telemetry map. (One CX and now **two** SX captures — re-verify on your own dri
   §5). The BLE-reachability split (which addresses answer vs refuse) and some scalings may differ
   on other drive units or firmware; cross-bike captures are welcome.
 
-## 7. Method — the capture that made it possible
+## 8. Method — the capture that made it possible
 
 The breakthrough was capturing at the **HCI layer** rather than the app layer. Android's
 built-in **Bluetooth HCI snoop log** (Developer Options → set to *Full*) records every BLE
@@ -208,6 +292,14 @@ parallel path uses a ComProbe hardware sniffer, which exports the same `btsnoop`
 > link (not just the notifications an app subscribes to), which is what surfaced the phone→bike
 > **write channel** — and ran the ComProbe hardware-sniffer captures, including the Performance
 > Line SX. Decisive on both counts.
+
+**For the navigation work (§6), two more methods.** Android's locked bootloader blocks HCI export on
+some phones, so the Flow→Kiox nav captures were taken on an **iPhone** — Apple's Bluetooth logging
+configuration profile writes a PacketLogger `.pklg` (same H4/ACL/L2CAP/ATT structure) into a
+`sysdiagnose`, untethered and root-free. And Flow's **map encoder** was recovered by decompiling the
+app with **`jadx`** (`com.bosch.ebike.onebikeapp` is native Kotlin, not Flutter, so it reads
+cleanly) — the class `TileConversionKt` is the source of the tile model in §6, and its
+`securestore`/keystore code is the source of the auth-boundary conclusion.
 
 ---
 

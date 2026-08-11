@@ -131,6 +131,10 @@ two-line `LONG_STRINGS` "REDUNDO\nSEG -3s", icon **91 = `NAVIGATION_ICON`**, a `
   (optionId 0 is protobuf-omitted = first row) on sub-id `0x84`.
 - The **response decode is the oracle**: no photographs needed to tell accepted from rejected — the bike says so.
 
+<img src="images/kiox-alert-warning.jpg" alt="Kiox 300 alert: a yellow warning triangle with two lines REDUNDO and SEG -3s" width="440">
+
+*The alert rendered with `WARNING_ICON` (icon 1): a yellow triangle on the left (template 3 `BANNER_ICON_LEFT`) + two lines of text.*
+
 **Where each surface renders.** The alert is an overlay that appears on the current screen — **confirmed on ALL
 screens** (not just nav), so it is a true any-screen coaching/notification surface. The option-group text page is
 nav-screen-only and sits behind the "hold 2 s" entry gate → a deliberate scrollable/selectable list.
@@ -142,6 +146,10 @@ nav-screen-only and sits behind the "hold 2 s" entry gate → a deliberate scrol
 tiles need a route object + Bosch-signed authorization, but a turn *instruction* is just
 `alert{ icon = maneuver arrow, LONG_STRINGS = "Turn left\nMain St", timeout }` — no route object, no OEM auth,
 and it shows on every screen. So a third-party app can drive real turn-by-turn guidance on the Kiox without the map.
+
+<img src="images/kiox-turn-arrow.jpg" alt="Kiox 300 showing a turn arrow with REDUNDO / SEG -3s overlaid on the battery data screen" width="440">
+
+*A turn arrow + text rendered by the alert on the **battery data screen** — not the nav screen — so turn-by-turn guidance shows on any screen, with no route object and no cert.*
 
 Maneuver → `IconIdEnum` value (core subset; taxonomy is Mapbox `type × modifier`, Flow pulls Mapbox tiles):
 
@@ -165,6 +173,10 @@ with the first row highlighted as the selection cursor — **not** the previousl
 That is the native "scroll to an item, press to select" UI driven by `UiControlCommandEnum` (`UP`/`DOWN`/`CONFIRM`),
 with the pick returned as `OptionResponse` on sub-id `0x84`. Capturing that `0x84` response on an actual
 select is the remaining step to close the scroll-select loop.
+
+<img src="images/kiox-menu-optiongroup.jpg" alt="Kiox 300 option-group menu titled Redundo with rows Hello from / our own app / row three, first row highlighted" width="440">
+
+*Our own option-group text page on the 300 — title "‹ Redundo" + our rows, first row highlighted as the selection cursor.*
 
 ---
 

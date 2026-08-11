@@ -30,10 +30,14 @@ The rest are untested per-device; treat the response as the oracle. Machine-read
 
 *(scalable source: [`kiox-icon-map.svg`](images/kiox-icon-map.svg))*
 
-**Provenance.** The **shapes are the real vector art** — Flow's bundled **Mapbox Navigation SDK**
-maneuver drawables (`res/drawable/mapbox_ic_*.xml`), decompiled and converted Android-vector → SVG,
-mapped to `IconIdEnum` by maneuver name (`1` `WARNING` = Flow's `ic_alert_warning`). The Kiox's own
-firmware bitmaps aren't in the APK, so this isn't a screenshot — but the geometry is exact.
+**Provenance — this is a maneuver *key*, not a picture of the Kiox's glyphs.** The Kiox draws each
+icon from its **own firmware icon set**, which is *not* in the APK (Flow just sends the id *number*
+and the head unit draws it). The glyphs here are Flow's bundled **Mapbox Navigation SDK** drawables
+(`res/drawable/mapbox_ic_*.xml`, decompiled Android-vector → SVG), mapped to `IconIdEnum` by maneuver
+name (`1` `WARNING` = Flow's `ic_alert_warning`). **Confirmed on hardware (Kiox 300):** the id ↔
+maneuver mapping is correct (a photographed id 2 is a merge, 5 is an arrive-right, etc.), but the
+**drawings differ** — e.g. id 5 `ARRIVE_RIGHT` curves the arrow *into* the dot on the Kiox vs a
+straight arrow here. Use this to look up **which maneuver an id is**, not what it looks like pixel-for-pixel.
 
 **Colors are applied by the head unit.** These are **monochrome template icons** (drawn `#000000`,
 tinted at runtime), so the sheet is rendered the way the Kiox actually shows them: **white on a dark
@@ -42,10 +46,10 @@ so a merge/fork shows *your* route white and the *other* road gray) and **`WARNI
 (confirmed on hardware). The exact per-icon color for every id is a firmware choice not fully encoded
 in the APK; what's faithful here is the geometry and the route-vs-secondary two-tone.
 
-**65 of 95 shown.** Not pictured: `CONTINUE_*`, `NEW_NAME_*`, and `INVALID_*` — Mapbox ships **no
-distinct glyph** for these; it reuses the matching *turn* arrow (so e.g. `continue left` looks like
-`turn left` = 44). Also absent from the Mapbox set: the status icons `LOCATOR` (89), `NO_GPS` (90),
-`RECENT_SEARCH` (92), `MUSIC` (93), `KOMOOT` (94), plus `ICON1` (0), `UPDOWN` (40), `FLAG` (43).
+**88 of 95 shown.** `CONTINUE_*`, `NEW_NAME_*`, and `INVALID_*` have **no distinct Mapbox glyph** — Mapbox
+(and the Kiox) reuse the matching *turn* arrow, so those ids are drawn here with the turn glyph as a proxy
+(e.g. `continue left` = the `turn left` arrow). Still not pictured: `ICON1` (0), `UPDOWN` (40), `FLAG` (43),
+and the status icons `NO_GPS` (90), `RECENT_SEARCH` (92), `MUSIC` (93) — no drawable for them in the APK.
 
 ## Status / UI icons
 

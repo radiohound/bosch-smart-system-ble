@@ -30,12 +30,17 @@ The rest are untested per-device; treat the response as the oracle. Machine-read
 
 *(scalable source: [`kiox-icon-map.svg`](images/kiox-icon-map.svg))*
 
-**Provenance / caveat.** The Kiox draws each icon from its own **firmware** — those exact bitmaps are
-*not* in Flow, so this sheet can't be a screenshot of them. What it *is*: Flow's bundled **Mapbox
-Navigation SDK** maneuver drawables (the arrows Flow renders on the phone), decompiled from the APK
-(`res/drawable/mapbox_ic_*.xml`, Android vector → SVG) and mapped to `IconIdEnum` by maneuver name.
-So each glyph is a **faithful stand-in for the maneuver** at that id — same turn, possibly a slightly
-different style than the Kiox's own drawing. `1` (`WARNING`) is Flow's own `ic_alert_warning`.
+**Provenance.** The **shapes are the real vector art** — Flow's bundled **Mapbox Navigation SDK**
+maneuver drawables (`res/drawable/mapbox_ic_*.xml`), decompiled and converted Android-vector → SVG,
+mapped to `IconIdEnum` by maneuver name (`1` `WARNING` = Flow's `ic_alert_warning`). The Kiox's own
+firmware bitmaps aren't in the APK, so this isn't a screenshot — but the geometry is exact.
+
+**Colors are applied by the head unit.** These are **monochrome template icons** (drawn `#000000`,
+tinted at runtime), so the sheet is rendered the way the Kiox actually shows them: **white on a dark
+background**, with the **secondary road in gray** (`#a8a8a8` — the real `mapbox_turn_icon_shadow_color`,
+so a merge/fork shows *your* route white and the *other* road gray) and **`WARNING` (1) in yellow**
+(confirmed on hardware). The exact per-icon color for every id is a firmware choice not fully encoded
+in the APK; what's faithful here is the geometry and the route-vs-secondary two-tone.
 
 **65 of 95 shown.** Not pictured: `CONTINUE_*`, `NEW_NAME_*`, and `INVALID_*` — Mapbox ships **no
 distinct glyph** for these; it reuses the matching *turn* arrow (so e.g. `continue left` looks like

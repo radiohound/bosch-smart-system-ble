@@ -24,6 +24,24 @@ The rest are untested per-device; treat the response as the oracle. Machine-read
 [`data/icon_ids.csv`](../data/icon_ids.csv). Names are verbatim from Bosch, including their typos
 (`NOTIFICAITON` at 45 and 78) — the **number** is what goes on the wire.
 
+## The glyphs
+
+![Kiox maneuver icon glyphs by id](images/kiox-icon-map.png)
+
+*(scalable source: [`kiox-icon-map.svg`](images/kiox-icon-map.svg))*
+
+**Provenance / caveat.** The Kiox draws each icon from its own **firmware** — those exact bitmaps are
+*not* in Flow, so this sheet can't be a screenshot of them. What it *is*: Flow's bundled **Mapbox
+Navigation SDK** maneuver drawables (the arrows Flow renders on the phone), decompiled from the APK
+(`res/drawable/mapbox_ic_*.xml`, Android vector → SVG) and mapped to `IconIdEnum` by maneuver name.
+So each glyph is a **faithful stand-in for the maneuver** at that id — same turn, possibly a slightly
+different style than the Kiox's own drawing. `1` (`WARNING`) is Flow's own `ic_alert_warning`.
+
+**65 of 95 shown.** Not pictured: `CONTINUE_*`, `NEW_NAME_*`, and `INVALID_*` — Mapbox ships **no
+distinct glyph** for these; it reuses the matching *turn* arrow (so e.g. `continue left` looks like
+`turn left` = 44). Also absent from the Mapbox set: the status icons `LOCATOR` (89), `NO_GPS` (90),
+`RECENT_SEARCH` (92), `MUSIC` (93), `KOMOOT` (94), plus `ICON1` (0), `UPDOWN` (40), `FLAG` (43).
+
 ## Status / UI icons
 
 | id | name | glyph |

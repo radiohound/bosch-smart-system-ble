@@ -61,7 +61,7 @@ provider fields. A lone push often won't render; Flow streams the whole set at ~
 | `C0-97` | distance-to-destination | varint (feet) | drives the countdown |
 | `C0-99` | time-to-destination | varint (seconds) | |
 | `C0-9A` | sequence | varint | monotonic tick |
-| `C0-82` | status banner | `{1:{08 01 10 03 22 <len> <text> 2A 01 59 40 05}}` | arbitrary on-screen text — **confirmed rendered** ("HELLO") |
+| `C0-82` | status banner | `FeatureStreamingAlert` — `{1:{08 <id> 10 <tmpl> 22 <text> 2A 01 <icon> 40 <timeout>}}` | **confirmed rendered** ("HELLO"); full schema (template/icon/2-line/buttons/timeout) in **§3a** |
 | `C0-A8` | speed / quality | `{1:speed, 2:quality}` | field 1 speed r≈0.91 vs GPS |
 | `C0-A4` | rider name | string | |
 | `C0-85` | altitude | varint | |
@@ -77,6 +77,94 @@ provider fields. A lone push often won't render; Flow streams the whole set at ~
 
 > `C0-82` status text renders anytime (it's the "Route started / Off route / Arrived" path). The
 > turn card (`C0-A1`) and the map only render inside an **active navigation session** — see §7.
+
+### 3a. The `C0-82` banner is a full `FeatureStreamingAlert` — **(SOURCE-VERIFIED from Flow)**
+
+Decompiled Flow (`NavigationBhuBanner.show()` → `FeatureStreamingAlert.newBuilder()…`) shows the
+`C0-82` payload we replay is **not** a fixed 12-char status line — it is the `FeatureStreamingAlert`
+protobuf. Field numbers and the enum catalogs come straight from the generated classes
+(`com.bosch.ebike.bes3.messagebus.FeatureStreamingAlert` + `AlertTemplateEnumType` / `IconIdEnumType`),
+so the earlier "single style, text only" reading is superseded. This replaces the planned blind
+field1/field2 hardware sweep — the fields are named, not guessed.
+
+Payload `{1:{ 08 <id> 10 <tmpl> 22 <longStr> 2A 01 <icon> 40 <timeout> }}` decodes as:
+
+| # | Field | Type | Meaning | What our `navStatus` hard-codes |
+|---|---|---|---|---|
+| 1 | `ALERT_ID` | int | id to correlate show/hide + the response | `1` |
+| 2 | `ALERT_TEMPLATE` | enum | layout: `DEFAULT`=0, `CENTERED`=1, `DEFAULT_PLUS_HORIZONTAL_ICON`=2, `BANNER_ICON_LEFT`=3 | `3` (never varied) |
+| 3 | `SHORT_STRINGS` | repeated string | short-form text | *(unused)* |
+| 4 | `LONG_STRINGS` | repeated string | **body text — Flow passes `firstTwoLinesOf(str)`, i.e. up to 2 lines** | one line |
+| 5 | `ICON_IDS` | repeated enum | icon(s); **95-value `IconIdEnum`** — `89`=`LOCATOR_ICON`, plus every turn arrow, `NAVIGATION_ICON`(91), `NO_GPS_ICON`(90), `MUSIC_ICON`(93)… | `89` (never varied) |
+| 6 | `PRIMARY_BUTTON` | `ButtonContent{1:text, 2:iconId}` | a labeled button | *(unused)* |
+| 7 | `SECONDARY_BUTTON` | `ButtonContent{1:text, 2:iconId}` | a second labeled button | *(unused)* |
+| 8 | `TIMEOUT` | int (s) | display seconds; **`0` = hide** (Flow's hide path is `setAlertId(id).setTimeout(0)`) | `5` |
+
+The `.setTimeout(5)` → wire `40 05` match is the anchor that pins the whole mapping.
+
+**It is interactive.** The bike replies `FeatureStreamingAlertResponse{1:alertId, 2:responseType}`
+with `responseType ∈ { PRIMARY_BUTTON_PRESSED, SECONDARY_BUTTON_PRESSED, TIMEOUT }` — so a two-button
+alert reports the rider's choice back to the phone over the same channel.
+
+**Interactive — the bike answers on a sibling address.** The response is a bike→phone write to
+`MobileAppAddresses.FEATURE_STREAMING_ALERT_RESPONSE` (raw **0x4083**, sub-id **0x83**), observed framed as
+`0D 00 C0 83 <seq> 08 <alertId> 10 <responseType>`. The menu/option sibling is
+`FEATURE_STREAMING_OPTION_RESPONSE` (raw **0x4084**, sub-id **0x84**) carrying `OptionResponse{1:optionGroupId, 2:optionId}`.
+
+### 3b. Kiox 300 hardware results — **(VERIFIED on hardware, one CX + Kiox 300)**
+
+First on-device run of the full `FeatureStreamingAlert` (alertId 7, template 3 = `BANNER_ICON_LEFT`,
+two-line `LONG_STRINGS` "REDUNDO\nSEG -3s", icon **91 = `NAVIGATION_ICON`**, a `PRIMARY_BUTTON`, timeout 8):
+
+| Sent | Bike reply (`0x83`) | Reading |
+|---|---|---|
+| template 3 + 2-line text + icon 91 + button | `responseType = 5` (`ICON_ERROR`) — **every** send | template **accepted**, text **accepted** (incl. two lines), **icon 91 rejected** |
+
+- **No `TEMPLATE_ERROR`, no `TEXT_ERROR`** → the 300 accepts template 3 and multi-line text. An `ICON_ERROR`
+  appears to reject the whole alert (nothing rendered), so a valid icon is required.
+- **Confirmed with a valid icon:** re-sent with `WARNING_ICON = 1` → response `TIMEOUT` (displayed, then auto-dismissed)
+  and it **rendered**: a yellow yield/warning triangle (icon-left) + two lines "REDUNDO"/"SEG -3s". So **icons 1
+  (`WARNING`) and 89 (`LOCATOR`) render; 91 (`NAVIGATION`) → `ICON_ERROR`** — the icon-support subset is the thing to map.
+- **Sound = negative, conclusive:** a fully-rendered alert produced no beep → the Kiox 300 has no buzzer (not a
+  permission gate; consistent with `PLAY_SOUND` `NO_ROUTE` and `BUZZER` `DENIED`).
+- **Interactive menu-pick confirmed:** selecting the highlighted row returned `OptionResponse{optionGroupId, optionId}`
+  (optionId 0 is protobuf-omitted = first row) on sub-id `0x84`.
+- The **response decode is the oracle**: no photographs needed to tell accepted from rejected — the bike says so.
+
+**Where each surface renders.** The alert is an overlay that appears on the current screen — **confirmed on ALL
+screens** (not just nav), so it is a true any-screen coaching/notification surface. The option-group text page is
+nav-screen-only and sits behind the "hold 2 s" entry gate → a deliberate scrollable/selectable list.
+
+### 3c. Turn-by-turn navigation via the alert — **no cert, any screen (VERIFIED on hardware)**
+
+**The alert's `ICON_IDS` is the full Mapbox maneuver-arrow set**, and those arrows render on the Kiox 300 (many
+`DIRECTION_*` icons tried, all displayed). This **routes around the cert wall** (§8): the C0-A1 turn card + map
+tiles need a route object + Bosch-signed authorization, but a turn *instruction* is just
+`alert{ icon = maneuver arrow, LONG_STRINGS = "Turn left\nMain St", timeout }` — no route object, no OEM auth,
+and it shows on every screen. So a third-party app can drive real turn-by-turn guidance on the Kiox without the map.
+
+Maneuver → `IconIdEnum` value (core subset; taxonomy is Mapbox `type × modifier`, Flow pulls Mapbox tiles):
+
+| Maneuver | icon | Maneuver | icon |
+|---|---|---|---|
+| turn left | 44 | slight left | 37 |
+| turn right | 38 | slight right | 55 |
+| straight / continue | 68 / 73 / 70 | sharp left | 69 |
+| u-turn | 59 | sharp right | 12 |
+| arrive / flag | 35 / 43 | fork left / right | 3 / 29 |
+| depart | 50 | keep left / right (fork slight) | 39 / 82 |
+| roundabout | 83 | end of road left / right | 25 / 71 |
+
+(Full set also has merge, on-ramp, off-ramp, rotary, new-name L/R/slight/sharp variants — 88 `DIRECTION_*` values total.)
+This is a **separate, simpler channel** from the C0-A1 turn card (§3): the alert needs no route object and renders
+anywhere; C0-A1 needs an active route + the nav screen. For custom nav, prefer the alert.
+
+**Scroll-select menu renders our content (separate finding).** The option-group / Text-PAGE path
+(§4–5) displayed our own list on the 300 — title "‹ Redundo" + rows "Hello from / our own app / row three"
+with the first row highlighted as the selection cursor — **not** the previously-seen Flow destination cache.
+That is the native "scroll to an item, press to select" UI driven by `UiControlCommandEnum` (`UP`/`DOWN`/`CONFIRM`),
+with the pick returned as `OptionResponse` on sub-id `0x84`. Capturing that `0x84` response on an actual
+select is the remaining step to close the scroll-select loop.
 
 ---
 

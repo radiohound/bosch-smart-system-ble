@@ -163,7 +163,8 @@ Maneuver → `IconIdEnum` value (core subset; taxonomy is Mapbox `type × modifi
 | depart | 50 | keep left / right (fork slight) | 39 / 82 |
 | roundabout | 83 | end of road left / right | 25 / 71 |
 
-(Full set also has merge, on-ramp, off-ramp, rotary, new-name L/R/slight/sharp variants — 88 `DIRECTION_*` values total.)
+(Full set also has merge, on-ramp, off-ramp, rotary, new-name L/R/slight/sharp variants — 87 `DIRECTION_*`
+maneuver icons, 95 icon ids total incl. status/UI. **Complete map: [`KIOX-ICONS.md`](KIOX-ICONS.md)** / [`data/icon_ids.csv`](../data/icon_ids.csv).)
 This is a **separate, simpler channel** from the C0-A1 turn card (§3): the alert needs no route object and renders
 anywhere; C0-A1 needs an active route + the nav screen. For custom nav, prefer the alert.
 

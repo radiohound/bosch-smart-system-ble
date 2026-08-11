@@ -32,9 +32,10 @@ The rest are untested per-device; treat the response as the oracle. Machine-read
 
 *The **actual head-unit artwork** — captured by sweeping every icon id onto a Kiox 300 and filming the
 screen, then cropping one frame per id. **ids 1–90** (0 is a placeholder; **91–94 don't render** on the
-300 — `NAVIGATION`/`RECENT_SEARCH`/`MUSIC`/`KOMOOT` return `ICON_ERROR`). Handheld capture, so a few
-cells clip the "93 %"/"eBike" edges and id 17 landed blank; otherwise this is what the Kiox really draws.
-Note how it differs from the Mapbox stand-ins below — e.g. id 5 curves the arrow **into** the dot.*
+300 — `NAVIGATION`/`RECENT_SEARCH`/`MUSIC`/`KOMOOT` return `ICON_ERROR`). Cropped loose so the whole glyph
+shows, so some cells also show the "93 %"/"eBike" UI around it; id 17 landed blank. Otherwise this is what
+the Kiox really draws — note how it differs from the Mapbox stand-ins below (e.g. id 5 curves the arrow
+**into** the dot).*
 
 ### Mapbox vector stand-ins (clean, for reference)
 

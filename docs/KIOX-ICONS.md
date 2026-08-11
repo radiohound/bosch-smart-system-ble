@@ -33,9 +33,9 @@ The rest are untested per-device; treat the response as the oracle. Machine-read
 *The **actual head-unit artwork** — captured by sweeping every icon id onto a Kiox 300 and filming the
 screen, then cropping one frame per id. **ids 1–90** (0 is a placeholder; **91–94 don't render** on the
 300 — `NAVIGATION`/`RECENT_SEARCH`/`MUSIC`/`KOMOOT` return `ICON_ERROR`). Cropped loose so the whole glyph
-shows, so some cells also show the "93 %"/"eBike" UI around it; id 17 landed blank. Otherwise this is what
-the Kiox really draws — note how it differs from the Mapbox stand-ins below (e.g. id 5 curves the arrow
-**into** the dot).*
+shows, so some cells also show the "93 %"/"eBike" UI around it. **id 17 is genuinely blank on the Kiox**
+(confirmed on hardware — the head unit draws nothing for it). Otherwise this is what the Kiox really
+draws — note how it differs from the Mapbox stand-ins below (e.g. id 5 curves the arrow **into** the dot).*
 
 ### Mapbox vector stand-ins (clean, for reference)
 
@@ -80,7 +80,7 @@ in the APK; what's faithful here is the geometry and the route-vs-secondary two-
 
 These are absent from the **Mapbox stand-in** because the source drawable isn't in Flow's APK — *not* because
 the Kiox lacks them. The captured sheet above proves it: the Kiox **does** draw `40` (up/down arrow), `43`
-(flag), and `89`/`90` (location pins). (In that capture `17` landed blank, and `0` / `91`–`94` don't render.)
+(flag), and `89`/`90` (location pins). (`17` `MERGE_STRAIGHT` renders **blank on the Kiox itself** — confirmed on hardware; `0` and `91`–`94` don't render.)
 
 ## Getting the *real* Kiox glyphs — open (help wanted)
 

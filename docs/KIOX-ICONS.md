@@ -28,7 +28,9 @@ The rest are untested per-device; treat the response as the oracle. Machine-read
 
 ![Kiox maneuver icon glyphs by id](images/kiox-icon-map.png)
 
-*(scalable source: [`kiox-icon-map.svg`](images/kiox-icon-map.svg))*
+*Maneuver **stand-ins** (Mapbox artwork), not the Kiox's actual firmware glyphs — see
+[Getting the real Kiox glyphs](#getting-the-real-kiox-glyphs--open-help-wanted) below. Scalable
+source: [`kiox-icon-map.svg`](images/kiox-icon-map.svg).*
 
 **Provenance — this is a maneuver *key*, not a picture of the Kiox's glyphs.** The Kiox draws each
 icon from its **own firmware icon set**, which is *not* in the APK (Flow just sends the id *number*
@@ -50,6 +52,36 @@ in the APK; what's faithful here is the geometry and the route-vs-secondary two-
 (and the Kiox) reuse the matching *turn* arrow, so those ids are drawn here with the turn glyph as a proxy
 (e.g. `continue left` = the `turn left` arrow). Still not pictured: `ICON1` (0), `UPDOWN` (40), `FLAG` (43),
 and the status icons `NO_GPS` (90), `RECENT_SEARCH` (92), `MUSIC` (93) — no drawable for them in the APK.
+
+## Getting the *real* Kiox glyphs — open (help wanted)
+
+To be explicit: **the sheet above is not what the Kiox draws.** It's the Mapbox phone artwork used as a
+maneuver stand-in. The head unit renders each id from **bitmaps baked into its own firmware**, in a
+visibly different style (a photographed id 5 `ARRIVE_RIGHT` curves the arrow into the destination dot;
+the Mapbox stand-in is a straight arrow with the dot on top). A firmware bitmap set is **not present
+anywhere in the Flow APK** — Flow only ever sends the id *number*. So building the *true* icon list needs
+one of two things, and **we'd welcome help with either**:
+
+**A. Screenshot each icon (best — exact pixels, no decoding).** Display an id via a `FeatureStreamingAlert`
+(we can already drive any id on demand) and capture the screen. The clean digital route is the head unit's
+own **`DEBUG_TAKE_SCREENSHOT`** command (`8D-82` / `A2-80`), which returns rendered pixels — but it reads
+`not-available` over **BLE**. The **wired diagnostic channel is less restricted than BLE** (it's how the
+USB-only fields like pack voltage are read), so `DEBUG_TAKE_SCREENSHOT` may well answer there. *Help wanted:*
+anyone with a **wired diagnostic connection** (e.g. a `bes3-reader`-style USB link) who can try `8D-82` and
+see whether image data comes back. The low-tech fallback is simply **photographing the screen** for each id.
+
+**B. Extract the Kiox firmware image and carve the bitmaps.** Flow's FOTA layer stores a direct **`downloadUrl`**
+(plus `fileHash`, `fileSizeBytes`, `pki`) for each component's firmware in a local SQLite DB
+(`UpdateSetInfoDatabase`, table `UpdateSetSoftware`), and Flow **does not decrypt** the image — it relays it
+to the bike as-is, so the downloaded file is exactly what the bike flashes. Given the image, the icon/font
+bank can be carved and rendered. *Caveats:* the URL only appears **when an update is actually offered** (a Kiox
+on older firmware, or the next Bosch push), reading the DB needs a **rooted phone**, and the image is
+**signed** (`pki`) and **may be encrypted** — though asset regions (icons/fonts) are often left in the clear.
+*Help wanted:* a captured **Kiox firmware update `.bin`** (any version — the icons rarely change).
+
+If you can help with a wired-channel `DEBUG_TAKE_SCREENSHOT` test, a Kiox on un-updated firmware, or a
+firmware `.bin`, please open an issue. Once we have the real glyphs, this sheet gets replaced with the
+actual head-unit artwork mapped by id.
 
 ## Status / UI icons
 

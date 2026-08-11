@@ -50,8 +50,24 @@ in the APK; what's faithful here is the geometry and the route-vs-secondary two-
 
 **88 of 95 shown.** `CONTINUE_*`, `NEW_NAME_*`, and `INVALID_*` have **no distinct Mapbox glyph** — Mapbox
 (and the Kiox) reuse the matching *turn* arrow, so those ids are drawn here with the turn glyph as a proxy
-(e.g. `continue left` = the `turn left` arrow). Still not pictured: `ICON1` (0), `UPDOWN` (40), `FLAG` (43),
-and the status icons `NO_GPS` (90), `RECENT_SEARCH` (92), `MUSIC` (93) — no drawable for them in the APK.
+(e.g. `continue left` = the `turn left` arrow; that's how ids like `4` `INVALID_SLIGHT_LEFT` and `16`
+`INVALID_STRAIGHT` appear).
+
+**The 7 ids *not* pictured** (the gaps in the sheet's numbering — every other id 1–94 is present):
+
+| id | name | why absent |
+|---|---|---|
+| 0 | `ICON1` | the enum's zero/default slot — a placeholder, not a real maneuver icon |
+| 17 | `MERGE_STRAIGHT` | Mapbox ships merge left/right/slight-left/slight-right but **no** `merge_straight` drawable |
+| 40 | `UPDOWN` | no Mapbox drawable (unusual maneuver) |
+| 43 | `FLAG` | no Mapbox drawable (overlaps `ARRIVE` = 35) |
+| 90 | `NO_GPS` | status/UI icon, outside the Mapbox nav set — no drawable found in the APK |
+| 92 | `RECENT_SEARCH` | " |
+| 93 | `MUSIC` | " |
+
+These are absent because **their source drawable isn't in Flow's APK**, not because the Kiox lacks them — the
+head unit almost certainly draws all 95 from its own firmware. Getting those (and the real look of every id)
+is the open work below.
 
 ## Getting the *real* Kiox glyphs — open (help wanted)
 

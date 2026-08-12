@@ -17,7 +17,7 @@ untested):
 | BLE request result | count | meaning |
 |--------------------|------:|---------|
 | **value**          | 161 | bike returned data |
-| **supported-empty**| 102 | bike acknowledges the field but had no value at the moment (fills in under load / in the right state) |
+| **supported-empty**| 100 | bike acknowledges the field but had no value at the moment (fills in under load / in the right state) |
 | **not-available**  | 481 | bike **refuses** the field on the BLE interface (`40 80 10 06`) |
 
 So only **~263 of ~895** answer with anything over BLE; **481 are USB-only.** Separately, **236
@@ -26,6 +26,14 @@ asking.
 
 > **The request-sweep counts 161; another 21 report only by auto-push → 182 report data.** The
 > sweep *requests* each address — run both parked **and under load** (riding at up to ~24 km/h,
+> **Correction (2026-08-12): `supported-empty` is a snapshot, and two rows were wrong.** `80-BE`
+> `FEATURE_PROPERTIES_RELEASE1` and `80-CD` `BATTERY_STATIC_FEATURE_PROPERTIES` were recorded as
+> `supported-empty` by the parked sweep, but a live re-read returns full flag sets from both (e.g.
+> `80-CD` reports `IMPROVED_SOC_CALCULATION` and `ISSUE_HEALING` true, `CHARGING_MODE_CONFIGURABLE`
+> and `CHARGING_LIMIT_CONFIGURABLE` false). Both are now recorded as `value`. **Treat the remaining
+> `supported-empty` rows as "not seen yet under these conditions", not as "this field is empty" —
+> the sweep read each field once, in one state, and that is not enough to prove absence.**
+
 > ~310 W motor) — and 161 answer. But **21 of the 102 `supported-empty` fields return
 > `supported-empty` to a request *even while moving*** — they're **push-only**: they auto-push their
 > values but never answer a poll, so a request-sweep can't see them. Mining every logged ride

@@ -57,7 +57,7 @@ ble_id,mcsp,field,unit,passive_stream,ble_request_result
 80-BB,0x00BB,Battery.BUTTON_PRESSED,,,not-available
 80-BC,0x00BC,Battery.SYSTEM_STATE_OF_CHARGE_FOR_RIDER,%,yes,value
 80-BD,0x00BD,Battery.DATA_MODEL_VERSION,,,not-available
-80-BE,0x00BE,Battery.FEATURE_PROPERTIES_RELEASE1,,yes,supported-empty
+80-BE,0x00BE,Battery.FEATURE_PROPERTIES_RELEASE1,,yes,value
 80-BF,0x00BF,Battery.SERVICE_CHARGE_STATE,,,command (not tested)
 80-C0,0x00C0,Battery.REQUEST_SERVICE_CHARGE,,,command (not tested)
 80-C1,0x00C1,Battery.DISCHARGE_DURATION,s,,not-available
@@ -72,7 +72,7 @@ ble_id,mcsp,field,unit,passive_stream,ble_request_result
 80-CA,0x00CA,Battery.INSTANCE_STATE_OF_CHARGE_FOR_RIDER,%,yes,value
 80-CB,0x00CB,Battery.INSTANCE_MAXIMUM_ALLOWED_CHARGE_CURRENT,A,,not-available
 80-CC,0x00CC,Battery.ALL_ISSUE_VISUALIZATION_EVENTS,,,supported-empty
-80-CD,0x00CD,Battery.BATTERY_STATIC_FEATURE_PROPERTIES,,yes,supported-empty
+80-CD,0x00CD,Battery.BATTERY_STATIC_FEATURE_PROPERTIES,,yes,value
 80-CE,0x00CE,Battery.EASTER_EGG,,,not-available
 80-D0,0x00D0,Battery.DUAL_BATTERY_MODE,,,not-available
 80-D1,0x00D1,Battery.SHUTDOWN_STATE,,,command (not tested)

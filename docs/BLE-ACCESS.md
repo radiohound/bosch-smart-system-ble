@@ -40,12 +40,54 @@ And **236 addresses are also pushed passively** (`passive_stream`) — free, no 
 > always separable.
 
 > **The four refusal codes were previously published as one bucket of 481 `not-available`.**
-> That collapse hid a real distinction: `DENIED` means the address exists and you are not
-> allowed, while `NO_ROUTE_FOUND` means there is nothing to ask. **They are not interchangeable
-> — but neither cleanly identifies a missing component.** On this bike, components that
-> aren't fitted answer *both* ways depending on the address (Battery2: 35 `NO_ROUTE_FOUND` +
-> 27 `DENIED`; ABS: 18 + 29; ConnectModule: 22 + 16). You still need the component inventory
-> to tell "not fitted" from "refused"; the status code alone will not tell you.
+> That collapse hid the system's actual structure, described next.
+
+## Two stages: policy first, then routing
+
+A refused request has been refused by one of **two independent stages**, and which one tells you
+something quite different.
+
+The bike we tested has **one** battery, but the registry documents two (`Battery` at `80-xx`,
+`Battery2` at `82-xx`) — identical field sets, one of which is not physically present. That
+makes the second component a control group, and the split is total:
+
+| `Battery2` (not fitted) | also refused on the *fitted* `Battery` |
+|-------------------------|---------------------------------------:|
+| its 27 `DENIED` offsets | **27 / 27** |
+| its 35 `NO_ROUTE_FOUND` offsets | **0 / 35** — and 33 of those 35 *answer* on the fitted battery |
+
+Not one offset lands on the wrong side. So the bus does this, in order:
+
+1. **Policy, on the address, before routing.** Restricted offsets return **`DENIED`** whether or
+   not anything is there to answer. A battery you do not own still refuses `82-8C`, because
+   `8C` is refused on the battery you *do* own.
+2. **Routing, only if policy passed.** No node registered at that address →
+   **`NO_ROUTE_FOUND`**.
+
+The offsets denied on both are exactly the electrical internals — `8C` cell voltage, `9D`, `9E`,
+`9F`, `A0`–`A3`. **The privilege wall is therefore a static, address-based filter enforced at the
+gateway**: not per-component, not state-dependent, not verb-dependent. That explains why nothing
+shifts it — a `SUBSCRIBE` instead of a `READ`, a different source-node identity, and re-testing
+under load all leave an address filter untouched. It also reframes "USB-only": those fields are
+not unreachable because Bluetooth is a weaker pipe, they are on a list this gateway enforces and
+the USB path attaches past it.
+
+**Using this to detect hardware.** The two stages give a reliable presence test, provided you
+only trust the right code:
+
+| result | what it tells you about the component |
+|--------|----------------------------------------|
+| answers (`value` / `supported-empty`) | **present** |
+| `NO_ROUTE_FOUND` | **not present** — or that component doesn't implement that feature |
+| `DENIED` | **nothing at all** — a policy verdict rendered before anyone looked |
+
+Probe presence with a non-denied offset (a serial number or part number works: `xx-01`/`xx-81`)
+and the answer is unambiguous. Probe with a restricted one and you learn only that the offset is
+restricted. The same logic explains the `NO_ROUTE_FOUND` rows on components you *do* have: the
+LED remote (`A0-B5`…`A0-BE`, view-stripe and tile configuration) and `8D-2D` `PLAY_SOUND` on the
+Kiox are features that hardware doesn't implement — no screen on the remote, no speaker on the
+head unit — while the head unit's own copies of the same tile addresses (`8D-20`, `8D-2C`) answer
+normally.
 
 > **Correction (2026-08-12): 11 rows were wrong, and the cause was our own pipeline.** Fields
 > including `98-08` BIKE_SPEED, `98-2D` DISPLAYED_BIKE_SPEED, `98-96` OEM_TORQUE_LIMITATION and

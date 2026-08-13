@@ -29,8 +29,10 @@ There's also a **third way into the same diagnostic data that isn't Bluetooth at
 published the full ~895-address BES3 registry (CC BY 4.0). The USB transport exposes *nearly
 everything*; the BLE diagnostic channel exposes only a **subset** — and a large part of what
 this write-up adds is exactly *which* subset. We keyed our tests to his registry and found that
-of ~895 addresses, **161 answer over BLE and ~481 refuse** (the electrical internals — pack
-voltage, live discharge current — stay USB-only, even under load). So: his registry is the
+of ~895 addresses, **171 answer a read over BLE and 473 refuse** — and the refusals split four
+ways (`DENIED` 349 / `NO_ROUTE_FOUND` 89 / `UNSUPPORTED` 34 / `NOT_READY` 1) rather than being one
+undifferentiated wall. The electrical internals — pack voltage, live discharge current — stay
+USB-only, refused even under load and refused to a subscribe as well as a read. So: his registry is the
 "what exists" map over USB; this repo is the "what you can reach over Bluetooth, and how" map.
 
 This write-up is mostly about that second, undocumented **BLE** channel — what its data means, and
@@ -122,7 +124,7 @@ writes is false, and — notably — **no cryptographic handshake gates the writ
 **And the write channel is also a *read* channel — this is how we display request-only fields.**
 Writing a one-field request — `30 05 40 80 <idHi> <idLo> 00` — makes the bike reply on `0x0011`
 with that field's value (or a "not available" status). That's what let us **map which of the
-~895 registry addresses are reachable over BLE** (161 answer with data) and **pull fields that
+~895 registry addresses are reachable over BLE** (171 answer a read with data) and **pull fields that
 never stream on their own**: the battery **FET** and drive-unit **PCB** temperatures
 (`80-D2` / `98-84`), the remote's internal battery voltage (`A1-C1`), the battery's
 max-discharge-current limit (`80-93`), and more. The request/response grammar and the full

@@ -1,8 +1,10 @@
 # BLE reachability of the BES3 registry
 
 Remko Weijnen's [`bes3-reader`](https://github.com/rweijnen/bosch-bes3-reader) documents all
-~895 BES3 diagnostic addresses read over **USB-C**. This doc answers the question his (USB)
-project can't: **which of those addresses are reachable over Bluetooth, and how.**
+~895 BES3 diagnostic addresses read over **USB-C**, and now also carries a hardware-confirmed
+BLE transport of its own. This doc is the **per-address reachability map**: which of those
+addresses answer over Bluetooth, *what they answer with*, and — where they refuse — the actual
+refusal code.
 
 Everything here is verified on **one bike** — a Performance Line CX (BDU3740, PowerTube 750,
 fw 20.x) — by requesting every readable address over the BLE diagnostic channel (`0x0011` /
@@ -11,34 +13,68 @@ one row per registry address, keyed to Remko's `MCSP` address + our `BLE id`.
 
 ## The headline
 
-Of the ~895 registry addresses, requested over BLE (146 command/action addresses excluded, 5
-untested):
+**746 addresses requested, parked, 2026-08-12.** Every outcome below is derived mechanically
+from the reply bytes — see [the grammar](#the-ble-requestresponse-grammar) — rather than from a
+human reading a log:
 
-| BLE request result | count | meaning |
-|--------------------|------:|---------|
-| **value**          | 161 | bike returned data |
-| **supported-empty**| 100 | bike acknowledges the field but had no value at the moment (fills in under load / in the right state) |
-| **not-available**  | 481 | bike **refuses** the field on the BLE interface (`40 80 10 06`) |
+| result | count | meaning |
+|--------|------:|---------|
+| **value**           | 171 | answered a READ with a payload |
+| **supported-empty** | 80 | acknowledged the READ, no payload at that moment |
+| **`DENIED`**        | 349 | exists, and the interface refuses you (`40 80 10 06`) |
+| **`NO_ROUTE_FOUND`**| 89 | nothing there to answer — no route to that endpoint |
+| **`UNSUPPORTED`**   | 34 | routed, but the component doesn't implement it |
+| **`NOT_READY`**     | 1 | temporarily unavailable |
+| **no reply at all** | 5 | requested, silence |
 
-So only **~263 of ~895** answer with anything over BLE; **481 are USB-only.** Separately, **236
-are also pushed passively** (the `passive_stream` column) — you receive those for free without
-asking.
+Separately from the READ sweep: **11 addresses answer an RPC** with data (`GET_…`/`READ_…`/
+`EXECUTE_…` — callable commands, *not* readable fields), and **11 answer a SUBSCRIBE**. Those
+are recorded in the CSV's `answered_as` column and deliberately do **not** count as readable.
+And **236 addresses are also pushed passively** (`passive_stream`) — free, no request needed.
 
-> **The request-sweep counts 161; another 21 report only by auto-push → 182 report data.** The
-> sweep *requests* each address — run both parked **and under load** (riding at up to ~24 km/h,
-> **Correction (2026-08-12): `supported-empty` is a snapshot, and two rows were wrong.** `80-BE`
-> `FEATURE_PROPERTIES_RELEASE1` and `80-CD` `BATTERY_STATIC_FEATURE_PROPERTIES` were recorded as
-> `supported-empty` by the parked sweep, but a live re-read returns full flag sets from both (e.g.
-> `80-CD` reports `IMPROVED_SOC_CALCULATION` and `ISSUE_HEALING` true, `CHARGING_MODE_CONFIGURABLE`
-> and `CHARGING_LIMIT_CONFIGURABLE` false). Both are now recorded as `value`. **Treat the remaining
-> `supported-empty` rows as "not seen yet under these conditions", not as "this field is empty" —
-> the sweep read each field once, in one state, and that is not enough to prove absence.**
+> **Why the CSV totals differ slightly from this table** (174 `value` / 90 `supported-empty`):
+> the table is *this one capture*, while the CSV is the accumulated record. A row is upgraded
+> when a capture shows more than was published, and **never downgraded on the strength of a
+> single capture** — a momentary field being empty this time is not evidence it can't answer.
+> The `sweep_2026_08_12` column carries this capture's verdict per address, so the two are
+> always separable.
 
-> ~310 W motor) — and 161 answer. But **21 of the 102 `supported-empty` fields return
+> **The four refusal codes were previously published as one bucket of 481 `not-available`.**
+> That collapse hid a real distinction: `DENIED` means the address exists and you are not
+> allowed, while `NO_ROUTE_FOUND` means there is nothing to ask. **They are not interchangeable
+> — but neither cleanly identifies a missing component.** On this bike, components that
+> aren't fitted answer *both* ways depending on the address (Battery2: 35 `NO_ROUTE_FOUND` +
+> 27 `DENIED`; ABS: 18 + 29; ConnectModule: 22 + 16). You still need the component inventory
+> to tell "not fitted" from "refused"; the status code alone will not tell you.
+
+> **Correction (2026-08-12): 11 rows were wrong, and the cause was our own pipeline.** Fields
+> including `98-08` BIKE_SPEED, `98-2D` DISPLAYED_BIKE_SPEED, `98-96` OEM_TORQUE_LIMITATION and
+> both `COMPONENT_LOCK_CONFIGURATION` addresses were published as `supported-empty` but return
+> real payloads. Verified two ways: our own client and `bes3-reader` return **byte-identical**
+> bytes for all of them, and replies arrive in **50–137 ms**. The bug was never in the protocol,
+> the tools, or the bike — it was the step that turned a capture into this CSV. That step has
+> been replaced by a classifier that derives every cell from the wire bytes, so this table can
+> be regenerated and audited from a capture rather than trusted.
+>
+> **Consequence for the rest of the map:** the `supported-empty` class is the one built by the
+> old pipeline, so treat it as "not seen under these conditions" and not as evidence of absence.
+> The `DENIED` rows are the sturdy ones — they are *active* replies, and `bes3-reader`'s
+> independent client reproduces 213 of them exactly.
+
+> **The 21 push-only fields below predate the fix and await a re-run while riding.** The counts
+> and the field list are unchanged from the earlier ridden sweep; what is now uncertain is
+> whether "returns `supported-empty` to a request even while moving" survives the corrected
+> client, since parked, `98-08` *does* answer a poll (`10 01`). The passive-stream findings
+> themselves are unaffected — those were mined from ride captures, not from request results.
+
+> **Push-only fields (from the earlier ridden sweep — see the caveat above).** Running the
+> sweep under load as well as parked (riding at up to ~24 km/h, ~310 W motor), **21 of the
+> `supported-empty` fields returned
 > `supported-empty` to a request *even while moving*** — they're **push-only**: they auto-push their
 > values but never answer a poll, so a request-sweep can't see them. Mining every logged ride
 > capture (up to a 206‑min ride) surfaces all 21 in the passive stream, so the true "reports data"
-> count is **161 + 21 = 182**. The 21:
+> count was **161 + 21 = 182**; after the 2026-08-12 re-sweep it is **174 + 19 = 193**, since
+> `98-08` and `98-2D` turned out to answer a read after all. The 21 as originally identified:
 > the **8 live movers** (motor/rider power, both torques, cadence, both speeds, assist mode —
 > nothing to report at a standstill); the **9-field `A2-4x` activity summary** — `A2-4A/4B` avg/max
 > rider power, `A2-48/49` avg/max cadence (÷2), `A2-46` avg speed (÷100), `A2-51` calories,
@@ -48,11 +84,18 @@ asking.
 > Kiox tiles string (`8D-23`). The `A2-4x` family auto-pushes sparsely and resets per activity —
 > use the settled late-ride values.
 
-> **The electrical internals are USB-only.** Pack cell voltage (`80-8C`), live discharge
-> current (`80-94` / `80-C8`), and last-end-of-charge voltage (`80-9E`) all return
-> **not-available** over BLE — and stay that way **even under load** (re-tested at up to 263 W
-> motor draw; 0 of the 481 flipped). If you need those, you need Remko's USB path. The only
-> voltage BLE gives you is `A1-C1` — the *remote's* internal battery (~4.185 V), not the pack.
+> **The electrical internals are USB-only — refused to a READ *and* to a SUBSCRIBE.** Pack cell
+> voltage (`80-8C`), live discharge current (`80-94` / `80-C8`), and last-end-of-charge voltage
+> (`80-9E`) all return **`DENIED`** over BLE. They stay that way **even under load** (re-tested at
+> up to 263 W motor draw; 0 of the refused set flipped), and — tested 2026-08-12 — they also
+> `DENIED` a **SUBSCRIBE**, which matters because several addresses on this bus answer a
+> subscribe while refusing a plain read. That possibility is now ruled out here, with a positive
+> control in the same session seconds earlier: `18-57` `REACHABLE_RANGE`, which *also* refuses a
+> read, subscribed successfully and pushed its value (per-assist-mode ranges 136 / 87 / 72 / 69).
+> So the subscribe mechanism demonstrably works on this bike and these four fields still refuse
+> it — a privilege boundary, not a wrong-verb artifact. If you need them, you need the USB path.
+> The only voltage BLE gives you is `A1-C1` — the *remote's* internal battery (~4.185 V), not the
+> pack.
 
 ## The BLE request/response grammar
 
@@ -74,10 +117,27 @@ The reply arrives as a notification on `0x0011`. Two things surprise people:
    | `C0 80 10 08 <varint>` | **supported, here's a numeric value** |
    | `C0 80 10 0A <len> <bytes>` | **supported, here's a string/blob** |
    | `C0 80 nn` (nothing after) | **supported, no value right now** |
-   | `40 80 10 06` | **not available** on this interface |
+   | `40 80 nn <status>` | **refused** — the last byte says *why* (below) |
 
    The status word is **not data** — decode only what follows it. (Parsing `c0 80 1d` as a
    protobuf field mis-reads it as a 3712 value; don't.)
+
+   **`<n>` is `(type << 4) | seq`,** so the high nibble tells you which operation is being
+   answered — `1` READ, `3` WRITE, `5` RPC, `7` SUBSCRIBE, `9` UNSUBSCRIBE. Worth decoding: an
+   address that answers only an RPC is a **callable command**, not a readable field, and
+   conflating the two puts commands in the map as if you could read them.
+
+   **Refusal status bytes** (`ResponseMessageStatusCode`, per `bes3-reader`'s `protocol.js`):
+
+   | byte | name | meaning |
+   |------|------|---------|
+   | `02` | `NO_ROUTE_FOUND` | nothing there to answer — no route to that endpoint |
+   | `03` | `NOT_READY` | temporarily unavailable |
+   | `04` | `UNSUPPORTED` | routed, but the component doesn't implement it |
+   | `06` | `DENIED` | it exists, and this interface refuses you |
+
+   Recording only "not available" throws away that distinction — which is exactly the mistake
+   the earlier version of this map made.
 
 ## The field-delivery model
 

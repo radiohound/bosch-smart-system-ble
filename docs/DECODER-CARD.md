@@ -4,8 +4,8 @@ The **format specification** and **field reference** for the Bosch Smart System'
 on‑wire frame format and what every field means. It is a reference, not a
 tool — any parser can implement it, against a capture from any sniffer. Two field layers: the **verified field map** (below) —
 fields byte‑confirmed with scaling and evidence — and the
-**[full BLE-reachable list](#full-ble-reachable-field-list-all-161)** — **161** addresses answer a
-request, plus **21 more that report only while riding → 182 report data** (incl. the bike's native
+**[full BLE-reachable list](#full-ble-reachable-field-list-all-193)** — **174** addresses answer a
+request, plus **19 more that report only while riding → 193 report data** (incl. the bike's native
 `A2‑4x` activity summary); most read‑but‑not‑yet‑verified.
 By **redundo.app**. Confidence markers: **✓** verified byte‑exact on a BDU3740 · **✓ᵃ**
 verified byte‑exact on the Android capture (smart system BDU3740 / Performance Line CX, fw 20.x) · **?**
@@ -168,11 +168,11 @@ pulled right after a ride of known profile to anchor the counters.
 > whenever cadence = 0 (Bosch is pedal‑assist only), then integrate. Cadence source: `0x98‑5A`
 > when the boot session was caught, otherwise **LDI field 2** (always available).
 
-## Full BLE-reachable field list (all 161)
+## Full BLE-reachable field list (all 193)
 
 Every address that **returned data** to a BLE request on our BDU3740 — the addresses Bosch's own
 **Flow app** reads, reverse-engineered, and confirmed by us **actually pulling a value back over
-Bluetooth**. They are the **161 of Remko's ~895** that answer over BLE; the rest are USB-only or
+Bluetooth**. They are the **174 of Remko's ~895** that answer a read over BLE, plus 19 that only auto-push while riding; the rest are USB-only or
 command-type (full sweep: [`data/ble_accessibility.csv`](../data/ble_accessibility.csv), grammar in
 [`BLE-ACCESS.md`](BLE-ACCESS.md)).
 
@@ -183,9 +183,9 @@ one (e.g. `zigzag/10 °C`, `÷100 Ah`); a bare unit or `—` = raw. **Descriptio
 `bes3-reader` registry description (CC BY 4.0). **Stream:** *auto* = pushed passively · *req* =
 request-only.
 
-*19 verified · 142 read-but-unverified · 161 reachable **by request** — plus **21 ride-only reporters** (below) that only stream while moving = **182 fields report data**.*
+*19 verified · 174 answer a **request** · 19 more only auto-push **while riding** = **193 fields report data**. Counts regenerated from [`ble_accessibility.csv`](../data/ble_accessibility.csv) after the 2026-08-12 re-sweep; the earlier "161" heading undercounted this table, which already carried the ride-only reporters inline.*
 
-### DriveUnit (60)
+### DriveUnit (63)
 
 | id | field | description | unit / scaling | stream | conf |
 |----|-------|-------------|----------------|:------:|:----:|
@@ -249,8 +249,12 @@ request-only.
 | `98‑84` | PRESENT_PCB_TEMPERATURE | — | zigzag/10°C (registry) | req | ◐ |
 | `98‑8B` | ASSIST_MODE_LIMITS | Per-mode assist limits | — | auto | ◐ |
 | `98‑8C` | MAXIMUM_CONFIGURED_DISCHARGE_CURRENT | Configured max battery discharge current | A | auto | ◐ |
+| `98‑1F` | BIKE_LIGHT_CONFIGURATION_OEM | Bike Light Configuration Oem | — | req | ◐ |
+| `98‑35` | COMPONENT_LOCK_CONFIGURATION | Component Lock Configuration | — | req | ◐ |
+| `98‑96` | OEM_TORQUE_LIMITATION | Oem Torque Limitation | — | req | ◐ |
 
-### Battery (27)
+
+### Battery (30)
 
 | id | field | description | unit / scaling | stream | conf |
 |----|-------|-------------|----------------|:------:|:----:|
@@ -281,8 +285,12 @@ request-only.
 | `80‑D8` | STATE_OF_HEALTH | — | % | auto | ◐ |
 | `80‑D9` | SYSTEM_TOTAL_ENERGY_FOR_RIDER | — | Wh | auto | ◐ |
 | `80‑E2` | TOTAL_CAPACITY | — | ÷100 Ah | auto | ✓ |
+| `80‑97` | COMPONENT_LOCK_CONFIGURATION | Component Lock Configuration | — | req | ◐ |
+| `80‑BE` | FEATURE_PROPERTIES_RELEASE1 | Feature Properties Release1 | — | req | ◐ |
+| `80‑CD` | BATTERY_STATIC_FEATURE_PROPERTIES | Static feature-capability flags | — | req | ◐ |
 
-### RemoteControl (56)
+
+### RemoteControl (59)
 
 | id | field | description | unit / scaling | stream | conf |
 |----|-------|-------------|----------------|:------:|:----:|
@@ -342,8 +350,12 @@ request-only.
 | `A2‑52` | ASSIST_MODE_USAGE_TOTAL | Per-assist-mode total usage duration | — | auto | ◐ |
 | `A2‑53` | ASSIST_MODE_USAGE_WITH_MOTOR_SUPPORT_ACTIVE | Per-assist-mode usage duration while motor actively assisting | — | req | ◐ |
 | `A2‑55` | BRAKE_EVENTS | Aggregate brake-event counters | — | auto | ◐ |
+| `A0‑E4` | SOFTWARE_UPDATE_STATUS | Software Update Status | — | req | ◐ |
+| `A1‑76` | E_SHIFT_CAPABILITIES_FOR_RIDER | E Shift Capabilities For Rider | — | req | ◐ |
+| `A2‑C1` | UPLOAD_READINESS | Upload Readiness | — | req | ◐ |
 
-### HeadUnit (18)
+
+### HeadUnit (20)
 
 | id | field | description | unit / scaling | stream | conf |
 |----|-------|-------------|----------------|:------:|:----:|
@@ -365,12 +377,21 @@ request-only.
 | `8D‑84` | HEAD_UNIT_STATIC_FEATURE_PROPERTIES | — | — | auto | ◐ |
 | `8D‑85` | SUPPORTED_TILE_IDS | — | — | req | ◐ |
 | `8D‑8A` | SUPPORTED_TILE_SIZES | — | — | req | ◐ |
+| `8D‑15` | HEAD_UNIT_FEATURE_PROPERTIES_RELEASE1 | Head Unit Feature Properties Release1 | — | req | ◐ |
+| `8D‑20` | VIEW_STRIPE_CAPABILITIES | View Stripe Capabilities | — | req | ◐ |
 
-### Ride-only reporters (21 — auto-push while moving)
 
-These return `supported-empty` to a direct request — **even while moving** — but auto-push real data
-in the passive stream. They're **push-only** (they stream but don't answer a poll), so a
-request-sweep can't see them. Counting these, **182 fields report data** (161 by request + 21).
+### Ride-only reporters (19 push-only + 2 that do answer a read)
+
+These auto-push real data in the passive stream. **19 of the 21 are push-only** — they returned
+`supported-empty` to a direct request even while moving, so a request-sweep can't see them.
+Counting these, **193 fields report data** (174 by request + 19 push-only).
+
+> **Two exceptions, found in the 2026-08-12 re-sweep: `98‑08` and `98‑2D` do answer a read.**
+> Parked, both reply with a payload — but one carrying no speed field (`10 01`, field 2 only),
+> which is consistent with proto3 omitting a zero. They are counted in the 174 readable, not in
+> the 19. **The push-only status of the remaining 19 predates the corrected client and is due a
+> re-run while riding** — see the pipeline correction in [`BLE-ACCESS.md`](BLE-ACCESS.md).
 The `A2‑4x` set is the bike's **native activity summary** (auto-pushes sparsely, per-activity — use
 late-ride values); `A2‑54` is validated to ±1–2% of the integrated power split.
 
@@ -490,7 +511,7 @@ rows**; several independent confirmations and a few new leads.
   WebUSB, CC BY 4.0) — the **canonical field‑name registry**: all ~895 BES3 datapoint names and
   addresses, read over the wired **USB** diagnostic port. It's the *other transport* — Remko maps
   everything reachable over USB; this card maps which of those answer over **BLE**, and how. We key
-  every name in the [full 161 list](#full-ble-reachable-field-list-all-161) to his registry, and it
+  every name in the [full list](#full-ble-reachable-field-list-all-193) to his registry, and it
   **corrected several of our earlier guesses**: `98‑1D` → `ROAD_SLOPE`, `80‑E2` → `TOTAL_CAPACITY`
   (not wheel circumference), `98‑29` → `REAR_WHEEL_CIRCUMFERENCE_USER`. No BLE‑vs‑USB
   contradictions where the transports overlap. His repo also carries a BLE transport, but it's

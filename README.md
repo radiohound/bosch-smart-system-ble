@@ -25,7 +25,7 @@ each field labelled with a confidence marker and the evidence behind it.
 |------|----------|
 | [`docs/FINDINGS.md`](docs/FINDINGS.md) | **Start here** — the plain-English walkthrough: what the system is, how it's framed, what the fields mean, the write channel, CX vs SX, and the capture method |
 | [`docs/DECODER-CARD.md`](docs/DECODER-CARD.md) | **The decoder card** — the full field map with confidence markers, frame format, the boot-session capture insight, stored-log format, LDI + reference-meter channels, and a cross-project comparison |
-| [`docs/BLE-ACCESS.md`](docs/BLE-ACCESS.md) | **BLE reachability of Remko's ~895-address registry** — which answer over BLE (161) vs USB-only (481), the request/response grammar, and the auto-push / config-dump / poll-on-demand delivery model |
+| [`docs/BLE-ACCESS.md`](docs/BLE-ACCESS.md) | **BLE reachability of Remko's ~895-address registry** — which answer over BLE (174) vs refused (473, split by status code), the request/response grammar, and the auto-push / config-dump / poll-on-demand delivery model |
 | [`docs/NAV-PROTOCOL.md`](docs/NAV-PROTOCOL.md) | **The navigation / feature-streaming protocol** — the command-channel frames, the turn card + maneuver codes, the vector map-tile format, the z18 Web-Mercator coordinate system, the session handshake, and the cryptographic boundary on live display (companion to FINDINGS §6) |
 | [`data/ble_accessibility.csv`](data/ble_accessibility.csv) | Every registry address × its BLE result (`value` / `supported-empty` / `not-available` / `command` / `passive`), keyed to Remko's `MCSP` address |
 | [`data/example-readings-cx.csv`](data/example-readings-cx.csv) | **Example capture** — every field's actual reading from one CX request-sweep (158 fields), decoded/scaled where the scaling is known (unverified ones marked *guess*), serials/IDs masked with `x`. A concrete companion to the reachability map |
@@ -44,8 +44,9 @@ each field labelled with a confidence marker and the evidence behind it.
   that way (his repo also carries an unconfirmed, decompile-derived BLE transport; the
   hardware-verified BLE map is here) — and the **BLE diagnostic channel** `0x0011`, the focus here. Bosch's official
   **LDI** `eb21` is the third (telemetry only). Our contribution is the BLE half: of Remko's
-  ~895 addresses, **which you can actually reach over Bluetooth, and how** (161 answer a request,
-  ~481 refuse; **21 more report only while riding → 182 report data** — the rest is USB-only).
+  ~895 addresses, **which you can actually reach over Bluetooth, and how** (174 answer a request;
+  473 refuse, and the refusals split into `DENIED` / `NO_ROUTE_FOUND` / `UNSUPPORTED` / `NOT_READY`
+  rather than one wall; **19 more report only while riding → 193 report data**).
 - **Two BLE surfaces, one vendor tree.** Both live under Bosch's base
   `0000xxxx-eaa2-11e9-81b4-2a2ae2dbcce4`: the **diagnostic channel** `0x0011` (the rich
   `0x30` telemetry) and the officially documented **LDI** `eb21`.
@@ -57,8 +58,8 @@ each field labelled with a confidence marker and the evidence behind it.
   (`98-2D`, integrates to odometer within 0.3%), delivered energy in Wh (`80-9C`), remaining
   energy ÷10 Wh (`80-91`), battery temp `zigzag(raw)/10` °C (`80-8B`), motor torque ÷20 N·m
   (`98-15`, peak = rated on two bikes). Any remaining candidates are marked as such.
-- **The bike keeps its own ride summary.** Beyond the request-reachable 161, **21 fields report
-  only while moving** (→ **182 report data**) — including the native `A2-4x` activity summary:
+- **The bike keeps its own ride summary.** Beyond the request-reachable 174, **19 fields report
+  only while moving** (→ **193 report data**) — including the native `A2-4x` activity summary:
   avg/max rider power, avg/max cadence, avg speed, calories, moving time, trick stats, and
   **`A2-54 RIDER_ENERGY_SHARE`** — the bike's own rider-vs-motor energy split, validated to **±1–2%**
   of the integrated power. All auto-pushed for free in the passive stream.

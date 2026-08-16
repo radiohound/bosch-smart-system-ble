@@ -289,7 +289,21 @@ Accepted tiles come back **not-displayed** (`10 00` vs Flow's `10 01`): they ren
 Selecting a destination triggers a **certificate exchange** — BER-TLV `7F21` cert with `5F24/5F25`
 validity, `5F34` sequence, `5F37` signature — a Bosch-CA-signed credential, mutually verified (the
 head unit stores a `RemoteControl.publicKeyType`; the bus carries a dedicated `bes3 Signature`
-message). This is the same gate that **denies** `DISPLAY_GENERIC_TEXT` (`8D-4A`) to third parties.
+message).
+
+> **Correction (2026-08-16): `DISPLAY_GENERIC_TEXT` is *not* blocked by this gate.** An earlier
+> version of this section said the certificate was "the same gate that denies `8D-4A`". It isn't.
+> `8D-4A` — along with `8D-24`, `8D-25` and `8D-82` `DEBUG_TAKE_SCREENSHOT` — is refused by the
+> **static address filter the gateway applies before routing** (see
+> [`BLE-ACCESS.md`](BLE-ACCESS.md#two-stages-policy-first-then-routing)), which is a different and
+> more absolute wall: it is **verb-independent** (`READ`, `SUBSCRIBE` and `RPC` all return
+> `DENIED`) and it applies even to addresses on components the bike does not have. No session,
+> credential or argument reaches those addresses. The certificate gate below governs the **map
+> canvas** specifically — authored tiles are accepted (`10 00`) and simply never rendered.
+>
+> The distinction matters: option-group text **does** render with no credential at all (see §7 and
+> `sendTextPage`), so "third parties cannot put text on the Kiox" was too strong. What they cannot
+> do is use `8D-4A`, and cannot open a map canvas.
 
 Decompiling Flow confirms the credential is **not extractable**: its `securestore` holds key material
 in the **Android hardware Keystore** (`KeyGenParameterSpec` / TEE-StrongBox) — the code uses the

@@ -98,8 +98,9 @@ routes below — is the only way to the true artwork. Still open, and **help wel
 `FeatureStreamingAlert` (each labeled "Icon N") and film it; crop a frame per id. That's how the sheet
 above was made. The **clean *digital*** version would be the head unit's own **`DEBUG_TAKE_SCREENSHOT`**
 (`8D-82` / `A2-80`) — but note it's a `CallableDataPoint<ScreenshotConfig, UInt>` that returns only a
-*handle*, with the image coming back over the separate **`UPLOAD_RESOURCE`** channel, and it reads
-`not-available` over **BLE**. The **wired diagnostic channel is less restricted** (it's how USB-only fields
+*handle*, with the image coming back over the separate **`UPLOAD_RESOURCE`** channel, and it is
+**`DENIED` over BLE — to an RPC as well as a read** (tested 2026-08-13). That is the gateway's
+pre-routing address filter, which no verb gets past, so there is no BLE route to this at all. The **wired diagnostic channel is less restricted** (it's how USB-only fields
 like pack voltage are read), so it may answer there. *Help wanted:* anyone with a **wired diagnostic link**
 (e.g. `bes3-reader`) who can try `8D-82` → `UPLOAD_RESOURCE` for pixel-perfect captures.
 

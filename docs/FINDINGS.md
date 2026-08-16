@@ -255,7 +255,14 @@ live **map canvas**, and the Kiox opens one only inside an **authenticated navig
 Selecting a destination triggers a **certificate exchange** — BER-TLV `7F21` cert with `5F24/5F25`
 validity dates, `5F34` sequence, `5F37` signature — i.e. a Bosch-CA-signed credential, mutually
 verified (the head unit stores a `RemoteControl.publicKeyType`; the bus has a dedicated `bes3`
-`Signature` message). This is the same gate that **denies** `DISPLAY_GENERIC_TEXT` to third parties.
+`Signature` message).
+
+> **Correction (2026-08-16):** this previously read "the same gate that denies `DISPLAY_GENERIC_TEXT`
+> to third parties." It is not. `8D-4A` (and `8D-24`/`8D-25`/`8D-82`) are refused by the **static
+> address filter applied before routing** — verb-independent, and applied even on components the
+> bike doesn't have — not by the certificate. See [`BLE-ACCESS.md`](BLE-ACCESS.md#two-stages-policy-first-then-routing).
+> Note also that option-group text **does** render with no credential, so third parties *can* put
+> text on a Kiox; what they cannot do is use `8D-4A` or open a map canvas.
 And decompiling Flow confirms the credential is **not extractable**: its `securestore` holds key
 material in the **Android hardware Keystore** (`KeyGenParameterSpec` / TEE-StrongBox), the code
 *uses* the private key but never contains it, and the trust root is **Bosch's CA** — a keypair we

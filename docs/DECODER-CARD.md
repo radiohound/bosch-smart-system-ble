@@ -76,12 +76,12 @@ Telemetry arrives on three BLE characteristics, all under Bosch's one vendor ser
 | `0x80‑E2` | **Battery total capacity** | raw **÷ 100** = Ah (2113 → **21.1 Ah** on the PowerTube 750; Nik's SX reads 1143 → 11.4 Ah) — matches **`Battery.TOTAL_CAPACITY`** in the registry. **NOT wheel circumference** (the earlier guess): it never changes with the Flow wheel setting because it isn't wheel‑related | ✓ |
 | `0x98‑29` | **Rear wheel circumference (user)** | raw **÷ 10** = mm — the Flow wheel setting itself (`0x98‑28` = OEM default; `0x98‑2F` = allowed limits). `DriveUnit.REAR_WHEEL_CIRCUMFERENCE_USER`. This is where wheel circumference actually lives (the earlier `80-E2` guess was battery capacity) | ✓ |
 | `0x98‑0C` | Assist mode names | **absent on smart system** — names arrive on `18-0D` instead | ✗ᵃ |
-| `0x18‑0D` | **Assist mode names** (configured) | string list, index = `98-09` value (e.g. OFF/ECO/TOUR+/eMTB‑shortcrank/eMTB+) | ✓ᵃ |
+| `0x18‑0D` | **Assist mode LONG names** (configured) | string list, index = `98-09` value (e.g. OFF/ECO/TOUR+/eMTB‑shortcrank/eMTB+). **These are the LONG names, and it matters:** this bike offers **two eMTB variants** as separate assignable modes with different ids, both short‑named `eMTB` — only the long name separates them (`eMTB` vs `eMTB-shortcrank`). Flow shows only one of the two and relabels it plain `eMTB`, so the split is invisible to a rider. **No crank‑length field exists anywhere on the bus**, so neither the bike nor the app can say which variant suits a given crank | ✓ᵃ |
 | `0x98‑4E` | Assist mode **IDs** (configured slots) | string list (e.g. A100M00040, A100MSPIC7…) | ✓ᵃ |
 | `0x18‑68` | Assist mode **catalog** | all available modes, id + name pairs (ECO/ECO+/TOUR/TOUR+/SPORT/eMTB/eMTB+/TURBO/AUTO…) | ✓ᵃ |
 | `0x18‑0E` | **Per‑mode display colors** | one RGBA varint per configured mode, same order as `18-0D` (OFF = transparent; e.g. ECO `#78BE20`, TOUR+ `#00A5D8`, eMTB `#9643ED`, TURBO‑red `#E20015` — the Kiox/LED‑Remote mode colors) | ✓ᵃ |
 | `0x00‑9B` | **Battery name** | text ("PowerTube 750"); uses extended addressing `C0 80 10` before the `0A` tag | ✓ |
-| `0x98‑74` | Motor ratings | two varints, W (250/600 on BDU3740; 600/600 on Android capture) | ✓ᵃ |
+| `0x98‑74` | **Maximum available motor power** | **three** varints (W): `{1 PRODUCT_LINE, 2 AVAILABLE_ASSIST_MODES, 3 SELECTED_ASSIST_MODE}`. **f1 and f2 read 600 in every capture — f1 is the motor ceiling and the one to use.** f3 **varies** (absent / 250 / 600), so it is **not** a nameplate; what drives it is unresolved. The earlier "250 W nominal / 600 W peak" was f3 mistaken for a rating — a rating cannot change | ✓ |
 | `0xA1‑86` | Product string | text ("smart system eBike") | ✓ᵃ |
 | `0xA1‑81` | Locale | text (e.g. "en-GB") | ✓ᵃ |
 | `0x80‑8B` | **Battery pack temperature** | **°C = zigzag(raw)/10** (raw is a plain varint; a bare raw/10 reads ~2× high — zigzag‑decode first, `zigzag(n) = (n>>1) ^ -(n&1)`). Matches Bosch Flow's `presentCellTemperature` and the registry (`Battery.PRESENT_PACK_TEMPERATURE`, signed ÷10); a 60‑min charge test tracks a textbook 22.5 → 28.6 °C warm‑up. This is the **internal cell** temp, so **surface IR anchors don't apply** — the earlier surface‑IR linear fit (°C ≈ 0.35·raw − 139) is superseded for that reason | ✓ |
@@ -235,13 +235,13 @@ request-only.
 | `98‑5F` | OEM_MANUFACTURING_LOCATION | — | — | auto | ◐ |
 | `98‑61` | OEM_MANUFACTURING_DATE | — | — | auto | ◐ |
 | `98‑65` | BIKE_NOT_MOVING | Bike detected as stationary | — | auto | ◐ |
-| `98‑68` | AVAILABLE_ASSIST_MODES_LOWER | — | id+name pairs | req | ✓ |
+| `98‑68` | AVAILABLE_ASSIST_MODES_LOWER | — | id+name pairs — **the LOWER half only**; `98‑0F` carries the UPPER half and a mode can be configured while appearing only there, so the assignable set is the **union** | req | ✓ |
 | `98‑69` | REQUIRED_ASSIST_MODES_LOWER | — | — | auto | ◐ |
 | `98‑6C` | OEM_BRAND_NAME | — | — | auto | ◐ |
 | `98‑6D` | POWER_ON_TIME_WITH_MOTOR_SUPPORT | Power-On Time (Motor Support) | s | auto | ◐ |
 | `98‑70` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE2 | — | — | auto | ◐ |
 | `98‑71` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE3 | — | — | auto | ◐ |
-| `98‑74` | MAXIMUM_AVAILABLE_MOTOR_POWER | — | two varints (W) | auto | ✓ |
+| `98‑74` | MAXIMUM_AVAILABLE_MOTOR_POWER | — | three varints (W); use **f1** (see above) | auto | ✓ |
 | `98‑75` | OEM_BIKE_MODEL_ID | — | — | auto | ◐ |
 | `98‑7A` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE4 | Feature-properties bitset, release 4 | — | auto | ◐ |
 | `98‑7D` | REGIO_SPEED_CONFIGURATION | Regional Speed Configuration ("Speed ID") | — | auto | ◐ |

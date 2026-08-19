@@ -14,12 +14,12 @@ id,field,scaling,confidence,note
 80-E2,Battery total capacity,raw / 100 = Ah,verified,Battery.TOTAL_CAPACITY per registry; 2113->21.1Ah (750 pack) / 1143->11.4Ah (Nik SX); NOT wheel circ - unchanged across Flow wheel setting
 98-29,Rear wheel circumference (user),raw / 10 = mm,verified,DriveUnit.REAR_WHEEL_CIRCUMFERENCE_USER; the Flow wheel setting itself; 98-28 = OEM default; this is where wheel circ actually lives (80-E2 was battery capacity)
 98-0C,Assist mode names,n/a,debunked_android,absent on smart system; names arrive on 18-0D
-18-0D,Assist mode names (configured),string list,verified_android,index = 98-09 value (OFF/ECO/TOUR+/eMTB-shortcrank/eMTB+)
+18-0D,Assist mode LONG names (configured),string list,verified,index = 98-09 value (OFF/ECO/TOUR+/eMTB-shortcrank/eMTB+). These are LONG names and the distinction matters: this bike offers TWO eMTB variants as separate assignable modes with different ids sharing the short name eMTB - only the long name separates them (eMTB vs eMTB-shortcrank). Flow shows only one of the two and relabels it plain eMTB so a rider never sees the split. No crank-length field exists anywhere on the bus so neither the bike nor the app can say which variant suits a given crank
 98-4E,Assist mode IDs (configured slots),string list,verified_android,e.g. A100M00040 A100MSPIC7
-18-68,Assist mode catalog,id+name pairs,verified_android,ECO/ECO+/TOUR/TOUR+/SPORT/eMTB/eMTB+/TURBO/AUTO
+18-68,Assist modes available (LOWER half),id+name pairs,verified,reply echo of request 98-68 = AVAILABLE_ASSIST_MODES_LOWER - NOT the whole catalog: 98-0F is the UPPER half and a mode can be configured while appearing only there. On this bike 98-68 returned 8 (ECO/ECO+/TOUR/TOUR+/eMTB/eMTB+/TURBO/AUTO) and 98-0F the other 2 (SPORT + the second eMTB variant); the full assignable set is the union
 18-0E,Per-mode display colors,RGBA varint per mode,verified_android,same order as 18-0D (ECO #78BE20 TOUR+ #00A5D8 eMTB #9643ED TURBO #E20015)
 00-9B,Battery name,text,verified,"""PowerTube 750""; extended addressing C0 80 10 before 0A tag"
-98-74,Motor ratings,two varints (W),verified_android,250/600 on BDU3740; 600/600 on Android capture
+98-74,Maximum available motor power,three varints (W),verified,MaximumAvailableMotorPower{1 PRODUCT_LINE 2 AVAILABLE_ASSIST_MODES 3 SELECTED_ASSIST_MODE}; f1/f2 = 600 in every capture (the motor ceiling - use f1); f3 VARIES (absent/250/600) so it is not a nameplate - what drives it is unresolved; the earlier "250 W nominal" was f3 misread as a rating
 A1-86,Product string,text,verified_android,"""smart system eBike"""
 A1-81,Locale,text,verified_android,"e.g. ""en-GB"""
 80-8B,Battery pack temperature,zigzag(raw)/10 = C,verified,plain raw/10 reads 2x high (zigzag first); matches Flow presentCellTemperature + registry signed-div10; charge test 22.5->28.6C; internal cell temp so surface-IR fit (0.35*raw-139) superseded

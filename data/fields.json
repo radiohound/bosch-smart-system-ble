@@ -158,10 +158,10 @@
     },
     {
       "id": "18-0D",
-      "field": "Assist mode names (configured)",
+      "field": "Assist mode LONG names (configured)",
       "scaling": "string list",
-      "confidence": "verified_android",
-      "note": "index = 98-09 value (OFF/ECO/TOUR+/eMTB-shortcrank/eMTB+)"
+      "confidence": "verified",
+      "note": "index = 98-09 value (OFF/ECO/TOUR+/eMTB-shortcrank/eMTB+). These are LONG names and the distinction matters: this bike offers TWO eMTB variants as separate assignable modes with different ids sharing the short name eMTB - only the long name separates them (eMTB vs eMTB-shortcrank). Flow shows only one of the two and relabels it plain eMTB so a rider never sees the split. No crank-length field exists anywhere on the bus so neither the bike nor the app can say which variant suits a given crank"
     },
     {
       "id": "98-4E",
@@ -172,10 +172,10 @@
     },
     {
       "id": "18-68",
-      "field": "Assist mode catalog",
+      "field": "Assist modes available (LOWER half)",
       "scaling": "id+name pairs",
-      "confidence": "verified_android",
-      "note": "ECO/ECO+/TOUR/TOUR+/SPORT/eMTB/eMTB+/TURBO/AUTO"
+      "confidence": "verified",
+      "note": "reply echo of request 98-68 = AVAILABLE_ASSIST_MODES_LOWER - NOT the whole catalog: 98-0F is the UPPER half and a mode can be configured while appearing only there. On this bike 98-68 returned 8 (ECO/ECO+/TOUR/TOUR+/eMTB/eMTB+/TURBO/AUTO) and 98-0F the other 2 (SPORT + the second eMTB variant); the full assignable set is the union"
     },
     {
       "id": "18-0E",
@@ -193,10 +193,10 @@
     },
     {
       "id": "98-74",
-      "field": "Motor ratings",
-      "scaling": "two varints (W)",
-      "confidence": "verified_android",
-      "note": "250/600 on BDU3740; 600/600 on Android capture"
+      "field": "Maximum available motor power",
+      "scaling": "three varints (W)",
+      "confidence": "verified",
+      "note": "MaximumAvailableMotorPower{1 PRODUCT_LINE 2 AVAILABLE_ASSIST_MODES 3 SELECTED_ASSIST_MODE}; f1/f2 = 600 in every capture (the motor ceiling - use f1); f3 VARIES (absent/250/600) so it is not a nameplate - what drives it is unresolved; the earlier \"250 W nominal\" was f3 misread as a rating"
     },
     {
       "id": "A1-86",
@@ -256,10 +256,66 @@
     },
     {
       "id": "A2-43",
-      "field": "Timer / uptime counter",
-      "scaling": "n/a",
-      "confidence": "debunked",
-      "note": "NOT temperature"
+      "field": "Activity moving time",
+      "scaling": "DURATION_WITHOUT_STOPS_OF_ACTIVITY (unit TBD)",
+      "confidence": "candidate",
+      "note": "un-debunked (was wrongly \"not temperature\"); auto-pushes during rides"
+    },
+    {
+      "id": "A2-54",
+      "field": "Rider energy share",
+      "scaling": "% of total propulsion energy from rider",
+      "confidence": "verified_android",
+      "note": "native rider-vs-motor split; whole-ride value matches integral 98-5B/(98-5B+cadence-gated 98-5D) within 1-2% on 3 rides (44~43%,36~37%,36~35%); converges over ride"
+    },
+    {
+      "id": "A2-4A",
+      "field": "Average rider power (activity)",
+      "scaling": "watts (= 98-5B scale)",
+      "confidence": "verified_android",
+      "note": "e.g. 181 W"
+    },
+    {
+      "id": "A2-4B",
+      "field": "Maximum rider power (activity)",
+      "scaling": "watts",
+      "confidence": "verified_android",
+      "note": "e.g. 478 W"
+    },
+    {
+      "id": "A2-48",
+      "field": "Average cadence (activity)",
+      "scaling": "raw / 2 = rpm (= 98-5A)",
+      "confidence": "verified_android",
+      "note": "174 -> 87 rpm"
+    },
+    {
+      "id": "A2-49",
+      "field": "Maximum cadence (activity)",
+      "scaling": "raw / 2 = rpm",
+      "confidence": "verified_android",
+      "note": "252 -> 126 rpm"
+    },
+    {
+      "id": "A2-46",
+      "field": "Average speed (activity)",
+      "scaling": "raw / 100 = km/h (= 98-2D)",
+      "confidence": "verified_android",
+      "note": "2087 -> 20.9 km/h"
+    },
+    {
+      "id": "A2-51",
+      "field": "Calories consumed (activity)",
+      "scaling": "kcal (Bosch estimate)",
+      "confidence": "candidate",
+      "note": "101-184 seen; estimate method/accuracy not validated"
+    },
+    {
+      "id": "A2-56",
+      "field": "Trick stats",
+      "scaling": "jump/trick detection",
+      "confidence": "candidate",
+      "note": "reads 1/2 on some rides; count-vs-enum unconfirmed"
     },
     {
       "id": "80-91",

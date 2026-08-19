@@ -272,8 +272,14 @@ verified (the head unit stores a `RemoteControl.publicKeyType`; the bus has a de
 > to third parties." It is not. `8D-4A` (and `8D-24`/`8D-25`/`8D-82`) are refused by the **static
 > address filter applied before routing** — verb-independent, and applied even on components the
 > bike doesn't have — not by the certificate. See [`BLE-ACCESS.md`](BLE-ACCESS.md#two-stages-policy-first-then-routing).
-> Note also that option-group text **does** render with no credential, so third parties *can* put
-> text on a Kiox; what they cannot do is use `8D-4A` or open a map canvas.
+> Note also that third parties **can** put text on a Kiox without any credential — but the two
+> routes are not equal. The `C0-82` **`FeatureStreamingAlert`** renders on **every screen**, carries
+> two lines, an icon and up to two labelled buttons, and is **interactive** (the bike replies with
+> which button was pressed) — that is the useful surface. The option-group text page also renders
+> our own content, but only on the **nav screen** and behind a "hold the button 2 s" entry gate that
+> the phone **cannot** dismiss (`A0-48` and `A0-43` both refuse), so it needs the rider to open it.
+> Both are detailed in [`NAV-PROTOCOL.md`](NAV-PROTOCOL.md#3a-the-c0-82-banner-is-a-full-featurestreamingalert--source-verified-from-flow).
+> What no third party can do is use `8D-4A` or open a map canvas.
 And decompiling Flow confirms the credential is **not extractable**: its `securestore` holds key
 material in the **Android hardware Keystore** (`KeyGenParameterSpec` / TEE-StrongBox), the code
 *uses* the private key but never contains it, and the trust root is **Bosch's CA** — a keypair we
@@ -294,8 +300,8 @@ tells anyone chasing "custom screens on a Kiox" exactly where the line is and wh
 
 - The `0x0011` stream is the drive unit's **output**, not a two-sided mirror — we never see the
   head unit *requesting* a field, because those requests run on the internal wired bus, off-BLE.
-- This is **one bike, deeply** — a CX (BDU3740) — with a second-generation cross-check (SX; see
-  §5). The BLE-reachability split (which addresses answer vs refuse) and some scalings may differ
+- This is **one bike, deeply** — a CX (BDU3740) — with a cross-check against a **second drive unit**,
+  a Performance Line SX (a different product line, not a later generation of the CX; see §5). The BLE-reachability split (which addresses answer vs refuse) and some scalings may differ
   on other drive units or firmware; cross-bike captures are welcome.
 
 ## 8. Method — the capture that made it possible

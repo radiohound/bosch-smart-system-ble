@@ -26,14 +26,19 @@ vendor service tree (base `…-eaa2-11e9-81b4-2a2ae2dbcce4`):
 There's also a **third way into the same diagnostic data that isn't Bluetooth at all**: a
 **USB-C** connection to the drive unit's controller. Remko Weijnen's
 [`bes3-reader`](https://github.com/rweijnen/bosch-bes3-reader) reverse-engineered that path and
-published the full ~895-address BES3 registry (CC BY 4.0). The USB transport exposes *nearly
-everything*; the BLE diagnostic channel exposes only a **subset** — and a large part of what
-this write-up adds is exactly *which* subset. We keyed our tests to his registry and found that
-of ~895 addresses, **171 answer a read over BLE and 473 refuse** — and the refusals split four
-ways (`DENIED` 349 / `NO_ROUTE_FOUND` 89 / `UNSUPPORTED` 34 / `NOT_READY` 1) rather than being one
-undifferentiated wall. The electrical internals — pack voltage, live discharge current — stay
-USB-only, refused even under load and refused to a subscribe as well as a read. So: his registry is the
-"what exists" map over USB; this repo is the "what you can reach over Bluetooth, and how" map.
+published the full ~895-address BES3 registry (CC BY 4.0). His tool now reads over **Bluetooth as
+well as USB**, and where the two overlap his BLE results and ours agree field-for-field — 213
+shared refusals, zero disagreements — which is independent confirmation of the map below rather
+than a competing one. The USB transport still exposes *nearly everything* while the BLE channel
+exposes only a **subset**, and a large part of what this write-up adds is exactly *which* subset,
+and why each address refuses. We keyed our tests to his registry and found that
+of ~895 addresses, **174 answer a read over BLE and 481 refuse** — and the refusals split four
+ways (`DENIED` 348 / `NO_ROUTE_FOUND` 90 / `UNSUPPORTED` 34 / `NOT_READY` 1, with 8 more refusing
+without a status recorded) rather than being one undifferentiated wall. The electrical internals — pack voltage, live discharge current — stay
+USB-only, refused even under load and refused to a subscribe as well as a read — with the subscribe
+verb proven working on the same bike in the same session, so that is a genuine privilege wall and not
+a wrong-verb artifact. So: his registry is the "what exists" map; this repo is the "what you can reach
+over Bluetooth, and why the rest refuses" map.
 
 This write-up is mostly about that second, undocumented **BLE** channel — what its data means, and
 how we proved each field rather than guessing. It also, in **§6**, follows that channel into the
@@ -84,13 +89,19 @@ verified results:
   which streams them every ride regardless of boot timing.
 - **Wheel circumference** is the *setting itself*: `98-29` (`REAR_WHEEL_CIRCUMFERENCE_USER`) /
   `98-28` (OEM default), raw ÷ 10 = mm — on the diagnostic channel.
-- **Speed** (`98-2D`, always present) is raw ÷ 100 = km/h — confirmed because integrating it
-  over a whole ride reproduces the odometer to within 0.3%.
+- **Speed** is raw ÷ 100 = km/h on both `98-2D` (`DISPLAYED_BIKE_SPEED`, the one always present,
+  and what the head unit shows) and `98-08` (`BIKE_SPEED`). Confirmed because integrating `98-2D`
+  over a whole ride reproduces the odometer to within 0.3% — and the two fields are **identical**
+  here across 113,147 paired samples (median ratio 1.000), so this bike adds no optimism to the
+  speed it displays, despite a `SPEED_DISPLAY_TOLERANCE` field existing in the registry.
 - **Delivered energy** (`80-9C`) is watt-hours; a ride's consumption is just last − first.
 - **Remaining battery energy** (`80-91`) is raw ÷ 10 = Wh, and the SoC percentage (`80-88`)
   is derived from it.
-- **Assist mode names, IDs, catalog, and colors** live on the `18-xx` family; the assist
-  level itself is `98-09`.
+- **Assist mode names, IDs and colors** live on the `18-xx` family; the assist level itself is
+  `98-09`. Two traps there: `18-0D` carries the **long** names, which matters because a bike can
+  offer two modes sharing one short name (this one has both `eMTB` and `eMTB-shortcrank`), and the
+  mode catalog is **split in two** — `98-68` is only the lower half, `98-0F` the upper, and a mode
+  can be configured while appearing solely in the latter.
 
 Two candidates closed this round: **motor torque** (`98-15`) is raw ÷ 20 = N·m — its ride peak
 lands on each bike's *rated* torque (CX **85 N·m**, SX **55 N·m**; see §5), which pins the scaling.
@@ -124,7 +135,7 @@ writes is false, and — notably — **no cryptographic handshake gates the writ
 **And the write channel is also a *read* channel — this is how we display request-only fields.**
 Writing a one-field request — `30 05 40 80 <idHi> <idLo> 00` — makes the bike reply on `0x0011`
 with that field's value (or a "not available" status). That's what let us **map which of the
-~895 registry addresses are reachable over BLE** (171 answer a read with data) and **pull fields that
+~895 registry addresses are reachable over BLE** (174 answer a read with data) and **pull fields that
 never stream on their own**: the battery **FET** and drive-unit **PCB** temperatures
 (`80-D2` / `98-84`), the remote's internal battery voltage (`A1-C1`), the battery's
 max-discharge-current limit (`80-93`), and more. The request/response grammar and the full

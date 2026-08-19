@@ -7,8 +7,8 @@ id,field,scaling,confidence,note
 80-9C,Delivered energy,Wh (direct monotonic),verified,ride Wh = last - first
 80-88,Battery SoC,%,verified,derived from 80-91
 98-5A,Cadence,raw / 2 = rpm,verified,boot-session only; else gate on LDI field 2
-98-08,Speed (2nd field),raw / 100 = km/h,verified,boot-session only; same speed as 98-2D
-98-2D,Speed (always present),raw / 100 = km/h,verified_android,integrates to odometer within 0.3%
+98-08,Bike speed (true),raw / 100 = km/h,verified,DriveUnit.BIKE_SPEED per registry. Measured identical to 98-2D DISPLAYED_BIKE_SPEED across 113147 paired samples (median ratio 1.000; IQR 1.000-1.001) so this bike adds no display optimism - worth noting because a SPEED_DISPLAY_TOLERANCE field exists in the registry
+98-2D,Bike speed (displayed),raw / 100 = km/h,verified,DriveUnit.DISPLAYED_BIKE_SPEED per registry - what the head unit shows. Integrates to odometer within 0.3% (-0.2% measured) and equals 98-08 exactly on this bike; it is the one always present in the stream so it is the practical speed source
 98-09,Assist level,0-4,verified,
 98-18,Odometer,metres,verified,matches LDI field 12
 80-E2,Battery total capacity,raw / 100 = Ah,verified,Battery.TOTAL_CAPACITY per registry; 2113->21.1Ah (750 pack) / 1143->11.4Ah (Nik SX); NOT wheel circ - unchanged across Flow wheel setting

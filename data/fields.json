@@ -109,17 +109,17 @@
     },
     {
       "id": "98-08",
-      "field": "Speed (2nd field)",
+      "field": "Bike speed (true)",
       "scaling": "raw / 100 = km/h",
       "confidence": "verified",
-      "note": "boot-session only; same speed as 98-2D"
+      "note": "DriveUnit.BIKE_SPEED per registry. Measured identical to 98-2D DISPLAYED_BIKE_SPEED across 113147 paired samples (median ratio 1.000; IQR 1.000-1.001) so this bike adds no display optimism - worth noting because a SPEED_DISPLAY_TOLERANCE field exists in the registry"
     },
     {
       "id": "98-2D",
-      "field": "Speed (always present)",
+      "field": "Bike speed (displayed)",
       "scaling": "raw / 100 = km/h",
-      "confidence": "verified_android",
-      "note": "integrates to odometer within 0.3%"
+      "confidence": "verified",
+      "note": "DriveUnit.DISPLAYED_BIKE_SPEED per registry - what the head unit shows. Integrates to odometer within 0.3% (-0.2% measured) and equals 98-08 exactly on this bike; it is the one always present in the stream so it is the practical speed source"
     },
     {
       "id": "98-09",

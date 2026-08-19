@@ -69,8 +69,8 @@ Telemetry arrives on three BLE characteristics, all under Bosch's one vendor ser
 | `0x80‑9C` | **Delivered energy** | Wh (direct, monotonic; **ride Wh = last − first**) | ✓ |
 | `0x80‑88` | Battery SoC | % | ✓ |
 | `0x98‑5A` | Cadence | raw **÷ 2** = rpm. Present **only when the capture catches the bike's boot session** (see capture note); otherwise absent — gate on **LDI field 2** instead | ✓ |
-| `0x98‑08` | Speed (2nd field) | raw **÷ 100** = km/h — same speed as `98-2D`, appears **alongside** it when the boot session is caught | ✓ |
-| `0x98‑2D` | **Speed (always present)** | raw **÷ 100** = km/h — verified integrates to odometer within **0.3%** (−0.2% measured) | ✓ᵃ |
+| `0x98‑08` | **Bike speed** (true) | raw **÷ 100** = km/h — `DriveUnit.BIKE_SPEED`. Appears alongside `98‑2D` when the boot session is caught. **Measured identical to the displayed speed** across 113,147 paired samples (median ratio 1.000, IQR 1.000–1.001), so this bike adds no display optimism — worth knowing because a `SPEED_DISPLAY_TOLERANCE` field exists in the registry | ✓ |
+| `0x98‑2D` | **Bike speed** (displayed) | raw **÷ 100** = km/h — `DriveUnit.DISPLAYED_BIKE_SPEED`, what the head unit shows. Integrates to odometer within **0.3%** (−0.2% measured) and equals `98‑08` exactly here. It is the one **always present** in the stream, so it is the practical speed source | ✓ᵃ |
 | `0x98‑09` | Assist level | 0–4 | ✓ |
 | `0x98‑18` | Odometer | metres — matches LDI field 12 | ✓ |
 | `0x80‑E2` | **Battery total capacity** | raw **÷ 100** = Ah (2113 → **21.1 Ah** on the PowerTube 750; Nik's SX reads 1143 → 11.4 Ah) — matches **`Battery.TOTAL_CAPACITY`** in the registry. **NOT wheel circumference** (the earlier guess): it never changes with the Flow wheel setting because it isn't wheel‑related | ✓ |

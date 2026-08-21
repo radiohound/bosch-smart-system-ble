@@ -1,0 +1,19 @@
+# Drafts and private working notes must never land in the public repo.
+# This repository is the published reference; anything unfinished, internal, or
+# commercially/strategically private lives in the private redundo repo instead.
+*-DRAFT.md
+*-draft.md
+FORUM-POST*.md
+CHARGELIMIT.md
+BOSCHMODECONFIG*.md
+BOSCH-ENERGY-MODEL.md
+BOSCH-FIELDS.md
+KIOX-BANNER.md
+GARMIN-CONNECTIQ.md
+
+# Captures carry bike serials, part numbers, the system-id GUID and GPS.
+# Scrub before anything derived from them is published.
+*.pklg
+*.btsnoop
+*.jsonl
+*.bin

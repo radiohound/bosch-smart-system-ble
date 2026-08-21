@@ -32,7 +32,7 @@ Separately from the READ sweep: **11 addresses answer an RPC** with data (`GET_�
 are recorded in the CSV's `answered_as` column and deliberately do **not** count as readable.
 And **236 addresses are also pushed passively** (`passive_stream`) — free, no request needed.
 
-> **Why the CSV totals differ slightly from this table** (174 `value` / 90 `supported-empty`):
+> **Why the CSV totals differ slightly from this table** (174 `value` + 4 `value (needs ConfigId arg)` / 90 `supported-empty`):
 > the table is *this one capture*, while the CSV is the accumulated record. A row is upgraded
 > when a capture shows more than was published, and **never downgraded on the strength of a
 > single capture** — a momentary field being empty this time is not evidence it can't answer.
@@ -247,3 +247,7 @@ by drive-unit generation and firmware.
 
 *BLE reachability results by [redundo.app](https://redundo.app). Address registry © Remko
 Weijnen, [`bes3-reader`](https://github.com/rweijnen/bosch-bes3-reader), CC BY 4.0.*
+
+---
+
+**The same bike has since been read over USB-C as well** (the drive unit's diagnostic bus, via the LED-controller port). The two transports turn out to expose different slices — 178 fields over BLE, 363 over USB, 400 by some transport, and 259 reachable over only one. See [TWO-TRANSPORT-REACHABILITY.md](TWO-TRANSPORT-REACHABILITY.md); the per-address USB result is the `usb_2026_08_21` column in [`data/ble_accessibility.csv`](../data/ble_accessibility.csv).

@@ -32,7 +32,9 @@ shared refusals, zero disagreements — which is independent confirmation of the
 than a competing one. The USB transport still exposes *nearly everything* while the BLE channel
 exposes only a **subset**, and a large part of what this write-up adds is exactly *which* subset,
 and why each address refuses. We keyed our tests to his registry and found that
-of ~895 addresses, **174 answer a read over BLE and 481 refuse** — and the refusals split four
+of ~895 addresses, **178 return data to a read over BLE and 481 refuse** — 174 answer a plain
+read, and 4 more (the UDAM config RPCs `90-8B`/`90-90`/`90-91`/`90-92`) return data when given a
+ConfigId argument — and the refusals split four
 ways (`DENIED` 348 / `NO_ROUTE_FOUND` 90 / `UNSUPPORTED` 34 / `NOT_READY` 1, with 8 more refusing
 without a status recorded) rather than being one undifferentiated wall. The electrical internals — pack voltage, live discharge current — stay
 USB-only, refused even under load and refused to a subscribe as well as a read — with the subscribe
@@ -154,7 +156,7 @@ writes is false, and — notably — **no cryptographic handshake gates the writ
 **And the write channel is also a *read* channel — this is how we display request-only fields.**
 Writing a one-field request — `30 05 40 80 <idHi> <idLo> 00` — makes the bike reply on `0x0011`
 with that field's value (or a "not available" status). That's what let us **map which of the
-~895 registry addresses are reachable over BLE** (174 answer a read with data) and **pull fields that
+~895 registry addresses are reachable over BLE** (178 return data to a read — 174 to a plain read plus 4 argument-taking UDAM RPCs) and **pull fields that
 never stream on their own**: the battery **FET** and drive-unit **PCB** temperatures
 (`80-D2` / `98-84`), the remote's internal battery voltage (`A1-C1`), the battery's
 max-discharge-current limit (`80-93`), and more. The request/response grammar and the full

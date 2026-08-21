@@ -5,8 +5,10 @@ on‑wire frame format and what every field means. It is a reference, not a
 tool — any parser can implement it, against a capture from any sniffer. Two field layers: the **verified field map** (below) —
 fields byte‑confirmed with scaling and evidence — and the
 **[full BLE-reachable list](#full-ble-reachable-field-list-all-193)** — **174** addresses answer a
-request, plus **19 more that report only while riding → 193 report data** (incl. the bike's native
-`A2‑4x` activity summary); most read‑but‑not‑yet‑verified.
+plain read, plus **19 more that report only while riding → 193 report data** (incl. the bike's native
+`A2‑4x` activity summary); most read‑but‑not‑yet‑verified. A further **4 UDAM config RPCs**
+(`90-8B`/`90-90`/`90-91`/`90-92`) return data when given a ConfigId argument — see
+[MODE-CONFIG.md](MODE-CONFIG.md) — so **178 addresses answer a request** in total.
 By **redundo.app**. Confidence markers: **✓** verified byte‑exact on a BDU3740 · **✓ᵃ**
 verified byte‑exact on the Android capture (smart system BDU3740 / Performance Line CX, fw 20.x) · **?**
 plausible but unconfirmed · **◐** read over BLE, scaling not yet verified · **✗** debunked (was a guess, proven wrong).
@@ -172,7 +174,7 @@ pulled right after a ride of known profile to anchor the counters.
 
 Every address that **returned data** to a BLE request on our BDU3740 — the addresses Bosch's own
 **Flow app** reads, reverse-engineered, and confirmed by us **actually pulling a value back over
-Bluetooth**. They are the **174 of Remko's ~895** that answer a read over BLE, plus 19 that only auto-push while riding; the rest are USB-only or
+Bluetooth**. They are the **174 of Remko's ~895** that answer a plain read over BLE (4 more UDAM RPCs return data given a ConfigId argument, for 178 that answer a request), plus 19 that only auto-push while riding; the rest are USB-only or
 command-type (full sweep: [`data/ble_accessibility.csv`](../data/ble_accessibility.csv), grammar in
 [`BLE-ACCESS.md`](BLE-ACCESS.md)).
 
@@ -183,7 +185,7 @@ one (e.g. `zigzag/10 °C`, `÷100 Ah`); a bare unit or `—` = raw. **Descriptio
 `bes3-reader` registry description (CC BY 4.0). **Stream:** *auto* = pushed passively · *req* =
 request-only.
 
-*19 verified · 174 answer a **request** · 19 more only auto-push **while riding** = **193 fields report data**. Counts regenerated from [`ble_accessibility.csv`](../data/ble_accessibility.csv) after the 2026-08-12 re-sweep; the earlier "161" heading undercounted this table, which already carried the ride-only reporters inline.*
+*19 verified · 174 answer a **plain read** · 19 more only auto-push **while riding** = **193 fields report data** (a further 4 UDAM RPCs answer a request with a ConfigId argument → 178 answer a request in total). Counts regenerated from [`ble_accessibility.csv`](../data/ble_accessibility.csv) after the 2026-08-12 re-sweep; the earlier "161" heading undercounted this table, which already carried the ride-only reporters inline.*
 
 ### DriveUnit (63)
 
@@ -385,11 +387,11 @@ request-only.
 
 These auto-push real data in the passive stream. **19 of the 21 are push-only** — they returned
 `supported-empty` to a direct request even while moving, so a request-sweep can't see them.
-Counting these, **193 fields report data** (174 by request + 19 push-only).
+Counting these, **193 fields report data** (174 by plain read + 19 push-only; a further 4 UDAM RPCs answer a request given a ConfigId → 178 answer a request).
 
 > **Two exceptions, found in the 2026-08-12 re-sweep: `98‑08` and `98‑2D` do answer a read.**
 > Parked, both reply with a payload — but one carrying no speed field (`10 01`, field 2 only),
-> which is consistent with proto3 omitting a zero. They are counted in the 174 readable, not in
+> which is consistent with proto3 omitting a zero. They are counted in the 174 plain-readable, not in
 > the 19. **The push-only status of the remaining 19 predates the corrected client and is due a
 > re-run while riding** — see the pipeline correction in [`BLE-ACCESS.md`](BLE-ACCESS.md).
 The `A2‑4x` set is the bike's **native activity summary** (auto-pushes sparsely, per-activity — use

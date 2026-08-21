@@ -41,3 +41,14 @@ A2-56,Trick stats,jump/trick detection,candidate,reads 1/2 on some rides; count-
 80-92,= 80-91 + 50 always,constant 5 Wh offset,verified_android,
 80-C5,exact duplicate of 80-91,n/a,verified_android,
 10-90..92,Per-mode tune parameters,support% / max torque / max power,candidate,40/85 Nm; 600 W
+98-68,Assist mode catalog (installed lower),{id version} list,verified,union with 98-0F; a configured mode can be absent here
+98-0F,Assist mode catalog (installed upper),{id version} list,verified,carries modes 98-68 omits; entries repeat field 1
+98-69,Assist modes required by OEM,{id version} list,verified,the manufacturer set; 98-3E (upper) empty on this bike
+98-09,Selected assist mode SLOT,index 1-4,verified,indexes into 98-4E - NOT a mode id; resolve via 98-4E then 90-8B
+90-8B,Assist mode information,record,verified,nested in payload f1: 1 id 2 short 3 long 4 packed RGBA 5 level; level!=0 = configured
+90-90,Mode parameters (current),UdamParams,verified,arg is a BARE ConfigId 0a 0a <id>
+90-91,Mode parameters (factory),UdamParams,verified,90-94 applies these exactly; near-uniform across modes on this bike
+90-92,Mode parameter limits,UdamParams min/max,verified,f4 cap 3200 on a 20mph_US-CA-NZ bike; the drive unit enforces it
+90-93,Mode parameters (write),UdamParams,verified,resends ALL six fields; arg wraps the ConfigId (0a 0c 0a 0a); C0+empty = refused
+90-94,Reset one mode to factory,ConfigId -> bool,verified,bare ConfigId arg; confirmed to apply 90-91 field for field
+98-74,Max available motor power,watts,verified,f1 PRODUCT_LINE = the ceiling; f3 is only the selected mode f5 echoed - NOT capability

@@ -123,6 +123,25 @@ cadence field, one speed field) for that entire power cycle. We confirmed this o
 different days: the boot capture saw everything; the mid-session capture saw none of the
 boot-only fields — not a decode miss, they simply weren't sent.
 
+**But do not subscribe too *early*.** Being present at boot is what you want; firing the
+notification-enable on `0x0011` in the first moment after connecting is not. Subscribe inside the
+bike's boot window and **that channel stays dead for the whole power cycle** — not a slow start,
+nothing recovers it — while the LDI stream on `eb21` keeps flowing happily. That combination is the
+trap: it looks exactly like a successful subscribe to a bike with nothing to say.
+
+Two things make it survivable:
+
+- **Delay, and learn the delay.** We wait ~2 s after connect before enabling notifications on
+  `0x0011`, and on a dead channel raise it a second at a time toward a 20 s ceiling, remembering the
+  working value per bike. Some bikes need considerably more than 2 s.
+- **Re-subscribe rather than just noting it.** Disabling and re-enabling the notification *does*
+  recover the channel without a power cycle. Learning the right delay for next time is no use to
+  someone staring at a dead channel now.
+
+And judge liveness by **recency, not by a count**. A lifetime "frames received" counter stays above
+zero after the channel dies, so gating on it means firing requests into a dead subscription and
+concluding the bike is unresponsive.
+
 ## 4. The write / command channel
 
 Reading *both directions* of the link (thanks to the HCI-snoop method) showed that Bosch's own
@@ -140,6 +159,20 @@ never stream on their own**: the battery **FET** and drive-unit **PCB** temperat
 (`80-D2` / `98-84`), the remote's internal battery voltage (`A1-C1`), the battery's
 max-discharge-current limit (`80-93`), and more. The request/response grammar and the full
 reachability map are in **[BLE-ACCESS.md](BLE-ACCESS.md)**.
+
+**The assist-mode configuration surface is documented in full in
+[MODE-CONFIG.md](MODE-CONFIG.md)** — reading and writing the four configured modes (`98-4E`), one
+mode's parameters (`90-90`/`90-93`, the `UdamParams` block), the factory defaults and per-mode reset
+(`90-91`/`90-94`), and the id → name resolution that `98-09` requires.
+
+Two results from that work belong here, because they bound what this channel can do:
+
+- **The drive unit enforces its own limits.** `90-92` caps the assist cut-off at 3200 (32.00 km/h)
+  on this bike. Writing 3541 against it was refused four times and read back unchanged.
+  **Derestriction is foreclosed by the protocol, not by anyone's discretion.**
+- **A refusal is silent.** Both an applied and a refused write reply with the `C0` success prefix;
+  only the payload differs (`08 01` = applied, empty = declined). Anything checking the prefix alone
+  will report writes that never happened — judge by re-reading, never by the acknowledgement.
 
 ## 5. Cross-generation: CX vs SX
 

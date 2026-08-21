@@ -181,6 +181,36 @@ The reply arrives as a notification on `0x0011`. Two things surprise people:
    Recording only "not available" throws away that distinction — which is exactly the mistake
    the earlier version of this map made.
 
+### An argument-taking RPC reads as "not-available" under an argument-less sweep
+
+The reachability sweep probes each address with a bare one-field request. That is the right probe
+for a value, and the **wrong** probe for an RPC that expects an argument — which answers only when
+it is given one.
+
+`90-90` / `90-91` / `90-92` (the UDAM reads) and `90-8B` all sat in the `not-available` bucket for
+this reason. Each of them returns data reliably when called with a `ConfigId`. Their
+`ble_request_result` is now recorded as **`value (needs ConfigId arg)`**; the raw
+`sweep_2026_08_12` column is left untouched, since the sweep result itself was not wrong — only the
+conclusion drawn from it.
+
+**So treat the 481 `not-available` count as an upper bound, not a verdict.** Some unknown fraction
+of it is argument-takers that were never given an argument. Anything in that bucket whose registry
+name reads like a command is worth re-probing properly before being written off.
+
+### The sequence number is 4 bits — and it is shared
+
+The low nibble of the `<SEQ>` byte is the request sequence; the high nibble is the class
+(`0` read, `2` write, `4` RPC, `6` subscribe, `8` unsubscribe). That leaves **16 slots, shared by
+everything in flight**, and replies carry no other way to say which request they answer.
+
+A burst is easy to build without noticing. Reading a full mode configuration fires roughly 22
+requests — a catalog read, then a name read and a parameter read per mode. The counter wraps, two
+`90-8B` calls collide on the same pending key, and one reply is dropped. The symptom is a single
+field that mysteriously never resolves, not an error.
+
+**Serialise same-address reads**, or track outstanding requests by `(address, seq)` and refuse to
+reuse a slot that is still open.
+
 ## The field-delivery model
 
 BLE fields arrive three different ways — this matters for anything that wants a *live* value:

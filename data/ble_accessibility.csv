@@ -372,15 +372,15 @@ ble_id,mcsp,field,unit,passive_stream,ble_request_result,status,answered_as,swee
 90-88,0x1088,DriveUnit.REPORT_ISSUE,,,not-available,DENIED,READ_RESPONSE,refused
 90-89,0x1089,DriveUnit.ISSUE_EVENT,,,not-available,DENIED,READ_RESPONSE,refused
 90-8A,0x108A,DriveUnit.ISSUE_VISUALIZATION_EVENT,,,not-available,UNSUPPORTED,READ_RESPONSE,refused
-90-8B,0x108B,DriveUnit.GET_ASSIST_MODE_INFORMATION,,yes,command (not tested),,RPC_RESPONSE,value
+90-8B,0x108B,DriveUnit.GET_ASSIST_MODE_INFORMATION,,yes,value (needs ConfigId arg),,RPC_RESPONSE,value
 90-8C,0x108C,DriveUnit.GET_ASSIST_MODE_STATISTICS,,yes,not-available,,RPC_RESPONSE,value
 90-8D,0x108D,DriveUnit.RESET_RIDE_STATISTICS,,,command (not tested),,,
 90-8E,0x108E,DriveUnit.RESET_RANGE_CALCULATION,,,command (not tested),,,
-90-90,0x1090,DriveUnit.READ_UDAM_VALUES,,yes,not-available,,RPC_RESPONSE,value
-90-91,0x1091,DriveUnit.READ_UDAM_DEFAULT_VALUES,,yes,not-available,,RPC_RESPONSE,value
-90-92,0x1092,DriveUnit.READ_UDAM_LIMITS,,yes,not-available,,RPC_RESPONSE,value
-90-93,0x1093,DriveUnit.SET_UDAM_VALUES_PARAMETERS,,,command (not tested),,,
-90-94,0x1094,DriveUnit.RESET_UDAM_VALUES,,,command (not tested),,,
+90-90,0x1090,DriveUnit.READ_UDAM_VALUES,,yes,value (needs ConfigId arg),,RPC_RESPONSE,value
+90-91,0x1091,DriveUnit.READ_UDAM_DEFAULT_VALUES,,yes,value (needs ConfigId arg),,RPC_RESPONSE,value
+90-92,0x1092,DriveUnit.READ_UDAM_LIMITS,,yes,value (needs ConfigId arg),,RPC_RESPONSE,value
+90-93,0x1093,DriveUnit.SET_UDAM_VALUES_PARAMETERS,,,command (verified working),,,
+90-94,0x1094,DriveUnit.RESET_UDAM_VALUES,,,command (verified working),,,
 90-95,0x1095,DriveUnit.ASSIST_MODE_STRENGTH,,,not-available,UNSUPPORTED,READ_RESPONSE,refused
 90-96,0x1096,DriveUnit.ASSIST_MODE_IS_OEM_ADJUSTABLE,,,not-available,DENIED,READ_RESPONSE,refused
 90-97,0x1097,DriveUnit.RESET_ALL_UDAM_VALUES,,,command (not tested),,,

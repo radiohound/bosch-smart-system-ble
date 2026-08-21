@@ -344,6 +344,83 @@
       "scaling": "support% / max torque / max power",
       "confidence": "candidate",
       "note": "40/85 Nm; 600 W"
+    },
+    {
+      "id": "98-68",
+      "field": "Assist mode catalog (installed lower)",
+      "scaling": "{id version} list",
+      "confidence": "verified",
+      "note": "union with 98-0F; a configured mode can be absent here"
+    },
+    {
+      "id": "98-0F",
+      "field": "Assist mode catalog (installed upper)",
+      "scaling": "{id version} list",
+      "confidence": "verified",
+      "note": "carries modes 98-68 omits; entries repeat field 1"
+    },
+    {
+      "id": "98-69",
+      "field": "Assist modes required by OEM",
+      "scaling": "{id version} list",
+      "confidence": "verified",
+      "note": "the manufacturer set; 98-3E (upper) empty on this bike"
+    },
+    {
+      "id": "98-09",
+      "field": "Selected assist mode SLOT",
+      "scaling": "index 1-4",
+      "confidence": "verified",
+      "note": "indexes into 98-4E - NOT a mode id; resolve via 98-4E then 90-8B"
+    },
+    {
+      "id": "90-8B",
+      "field": "Assist mode information",
+      "scaling": "record",
+      "confidence": "verified",
+      "note": "nested in payload f1: 1 id 2 short 3 long 4 packed RGBA 5 level; level!=0 = configured"
+    },
+    {
+      "id": "90-90",
+      "field": "Mode parameters (current)",
+      "scaling": "UdamParams",
+      "confidence": "verified",
+      "note": "arg is a BARE ConfigId 0a 0a <id>"
+    },
+    {
+      "id": "90-91",
+      "field": "Mode parameters (factory)",
+      "scaling": "UdamParams",
+      "confidence": "verified",
+      "note": "90-94 applies these exactly; near-uniform across modes on this bike"
+    },
+    {
+      "id": "90-92",
+      "field": "Mode parameter limits",
+      "scaling": "UdamParams min/max",
+      "confidence": "verified",
+      "note": "f4 cap 3200 on a 20mph_US-CA-NZ bike; the drive unit enforces it"
+    },
+    {
+      "id": "90-93",
+      "field": "Mode parameters (write)",
+      "scaling": "UdamParams",
+      "confidence": "verified",
+      "note": "resends ALL six fields; arg wraps the ConfigId (0a 0c 0a 0a); C0+empty = refused"
+    },
+    {
+      "id": "90-94",
+      "field": "Reset one mode to factory",
+      "scaling": "ConfigId -> bool",
+      "confidence": "verified",
+      "note": "bare ConfigId arg; confirmed to apply 90-91 field for field"
+    },
+    {
+      "id": "98-74",
+      "field": "Max available motor power",
+      "scaling": "watts",
+      "confidence": "verified",
+      "note": "f1 PRODUCT_LINE = the ceiling; f3 is only the selected mode f5 echoed - NOT capability"
     }
   ],
   "ldi_fields": [

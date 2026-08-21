@@ -46,6 +46,15 @@ the Mapbox stand-ins below (e.g. id 5 curves the arrow **into** the dot).*
 photo above is rough, and covers the maneuver taxonomy tidily. Scalable source:
 [`kiox-icon-map.svg`](images/kiox-icon-map.svg).*
 
+> **These are the icons Flow draws on the PHONE, not anything the bike renders.** Flow uses the
+> Mapbox Navigation SDK for its own in-app turn-by-turn screen, and these are that SDK's drawables.
+> They appear here only because their maneuver names line up with `IconIdEnum`, which makes them a
+> convenient key. They were never the Kiox's glyphs and are not derived from head-unit firmware.
+
+**Attribution.** The vector artwork in this second sheet is **Mapbox's**, extracted from the Mapbox
+Navigation SDK bundled inside the Flow APK (`res/drawable/mapbox_ic_*.xml`) and re-rendered. Only the
+**id → maneuver mapping** is our work.
+
 **Provenance — this is a maneuver *key*, not a picture of the Kiox's glyphs.** The Kiox draws each
 icon from its **own firmware icon set**, which is *not* in the APK (Flow just sends the id *number*
 and the head unit draws it). The glyphs here are Flow's bundled **Mapbox Navigation SDK** drawables

@@ -60,6 +60,35 @@ surface — `CHARGING_SETTINGS`, `CHARGING_INFORMATION`, `SO_C_UPPER_LIMIT` /
 schema, but it is reachable from no client interface we can find. `DENIED` is policy
 applied to the address before routing, so this is a hard wall, not a readiness state.
 
+## `DENIED` is verb-independent, not just read-refused
+
+A `DENIED` answer to a READ only proves the *read verb* was refused. MCSP has others,
+and on this bus some datapoints refuse a one-shot read while answering a subscribe —
+`DriveUnit.REACHABLE_RANGE` is the known case over BLE, and Flow itself only ever
+reads it via `.subscribe()`. So the wall above needed testing with a second verb
+before it could be called a wall at all.
+
+It has been. **Every one of the 417 addresses that answers `DENIED` to a READ over USB
+was re-tried with SUBSCRIBE. All 417 refused that too** — a well-formed
+`SUBSCRIBE_RESPONSE` carrying `DENIED`, not a dropped frame. Zero exceptions, none
+left untested. Positive control in the same session: `PRESENT_CELL_VOLTAGE`,
+`PRESENT_PACK_TEMPERATURE` and `STATE_OF_CHARGE` all subscribed and pushed live values
+(pack temp read 23.0 °C and the subscription pushed 23.1 °C — a real notification, not
+an echo), so the subscribe path demonstrably works on this bike.
+
+Per-address results are the `usb_subscribe_2026_08_21` column.
+
+**A `SUBSCRIBE_RESPONSE: ok` is NOT evidence of reachability.** 44 subscribes were
+accepted and then never pushed anything — and every single one came from an address
+whose read said `NO_ROUTE_FOUND` or `NOT_READY`, never from a `DENIED` one. 39 of the
+44 are on hardware this bike does not have (no second battery, no ABS, no connect
+module). **The bike accepts subscribe registrations for absent components and simply
+never delivers.** Anyone scoring subscribe-acks as reachable would report 44 fields
+that do not exist.
+
+So the two verbs answer the same question the same way, and the charge-control surface
+is sealed against both.
+
 ## Method notes, so this is reproducible
 
 - **Join key:** match the CSV's `mcsp` column (`0x00D8`, component-qualified) against
@@ -74,6 +103,17 @@ applied to the address before routing, so this is a hard wall, not a readiness s
   `UNSUPPORTED`, `timeout`. `NO_ROUTE_FOUND` is the only decline that signals a
   genuinely absent component (no ABS, no second battery); the rest prove the
   component is present.
+- `usb_subscribe_2026_08_21` values: `DENIED` (or another status name) = the bike
+  refused the SUBSCRIBE; `accepted-silent` = subscribe accepted, nothing pushed inside
+  the notify window; `value` = accepted and a value arrived; empty = not attempted,
+  because the plain READ already succeeded. Only addresses that *declined* a read were
+  retried.
+- **The frame-drop rate is real and symmetric — never update a cell from a single
+  read.** Across two full sweeps of the same parked bike, 11 addresses moved `DENIED`
+  → `timeout` and 11 moved `timeout` → `DENIED`, ~1.5% each way. `Battery.SERIAL_NUMBER`
+  timed out once, which is proof enough that a lone timeout means nothing. Every
+  timeout in the subscribe pass was re-probed individually until it produced a real
+  status; that is why the column contains no `timeout` values.
 
 Scope, as everywhere in this repo: **one bike, deeply verified.** A second bike, or
 a different head-unit / battery configuration, would shift the absent-hardware rows.

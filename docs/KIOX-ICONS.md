@@ -101,7 +101,7 @@ routes below — is the only way to the true artwork. Still open, and **help wel
 
 - a **cleaner / pixel-perfect** capture (the handheld video clips a few cells and id 17 landed blank),
 - the **other head units** — Kiox 500, Nyon, Purion (and the 300 on other firmware),
-- and either route below.
+- and a wired-link answer to `8D-82` (route A below), which would give pixel-perfect output.
 
 **A. Screenshot / film each icon — *done for the 300*.** Sweep every id onto the screen via a
 `FeatureStreamingAlert` (each labeled "Icon N") and film it; crop a frame per id. That's how the sheet
@@ -113,17 +113,23 @@ pre-routing address filter, which no verb gets past, so there is no BLE route to
 like pack voltage are read), so it may answer there. *Help wanted:* anyone with a **wired diagnostic link**
 (e.g. `bes3-reader`) who can try `8D-82` → `UPLOAD_RESOURCE` for pixel-perfect captures.
 
-**B. Extract the Kiox firmware image and carve the bitmaps.** Flow's FOTA layer stores a direct **`downloadUrl`**
-(plus `fileHash`, `fileSizeBytes`, `pki`) for each component's firmware in a local SQLite DB
-(`UpdateSetInfoDatabase`, table `UpdateSetSoftware`), and Flow **does not decrypt** the image — it relays it
-to the bike as-is, so the downloaded file is exactly what the bike flashes. Given the image, the icon/font
-bank can be carved and rendered. *Caveats:* the URL only appears **when an update is actually offered** (a Kiox
-on older firmware, or the next Bosch push), reading the DB needs a **rooted phone**, and the image is
-**signed** (`pki`) and **may be encrypted** — though asset regions (icons/fonts) are often left in the clear.
-*Help wanted:* a captured **Kiox firmware update `.bin`** (any version — the icons rarely change).
+**B. Extract the Kiox firmware image and carve the bitmaps — documented, but not pursued.** Flow's FOTA
+layer stores a direct **`downloadUrl`** (plus `fileHash`, `fileSizeBytes`, `pki`) for each component's
+firmware in a local SQLite DB (`UpdateSetInfoDatabase`, table `UpdateSetSoftware`), and Flow **does not
+decrypt** the image — it relays it to the bike as-is. In principle the icon/font bank could be carved from
+it. *Caveats:* the URL only appears **when an update is actually offered**, reading the DB needs a
+**rooted phone**, and the image is **signed** (`pki`) and **may be encrypted**.
 
-The **Kiox 300 is now covered** (ids 1–90, above). Help is most wanted for **other head units**, a
-**cleaner capture**, and route B for **pixel-perfect** bitmaps — please open an issue if you can help.
+**We are not asking anyone for firmware images, and this repository does not host them.** Route A above
+already produced the Kiox 300 sheet and works for any head unit without touching vendor binaries, so this
+route buys us nothing we cannot get more simply. It is recorded here because knowing where the metadata
+lives explains how component updates reach the bike — not as a task list.
+
+The **Kiox 300 is now covered** (ids 1–90, above). Help is most wanted for **other head units**
+(Kiox 500, Nyon, Purion) and a **cleaner capture** of the 300 — both via route A, which needs nothing
+but the head unit itself. For pixel-perfect output, the open question is whether
+`DEBUG_TAKE_SCREENSHOT` (`8D-82`) answers over the **wired** diagnostic link, since it is firmly
+`DENIED` over BLE. Please open an issue if you can help with any of those.
 
 ## Status / UI icons
 

@@ -125,6 +125,13 @@ cadence field, one speed field) for that entire power cycle. We confirmed this o
 different days: the boot capture saw everything; the mid-session capture saw none of the
 boot-only fields — not a decode miss, they simply weren't sent.
 
+> **UPDATE (2026-08-21): the boot-window sensitivity is a startup HANDSHAKE, not a timing
+> quirk.** The bike drives the MobileApp through a staged startup (`0x40AA` `MOBILE_APP_STATIC_FEATURE_PROPERTIES`
+> read + `0x40A9` `STARTUP_STAGE` writes, marching STAGE5→STAGE9). A client that ANSWERS the
+> handshake can subscribe to `0x0011` immediately and the channel stays alive — confirmed on
+> hardware. Subscribing mutely during boot is what kills it. Full detail and credit in
+> [STARTUP-HANDSHAKE.md](STARTUP-HANDSHAKE.md).
+
 **But do not subscribe too *early*.** Being present at boot is what you want; firing the
 notification-enable on `0x0011` in the first moment after connecting is not. Subscribe inside the
 bike's boot window and **that channel stays dead for the whole power cycle** — not a slow start,

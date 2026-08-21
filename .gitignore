@@ -17,3 +17,6 @@ GARMIN-CONNECTIQ.md
 *.btsnoop
 *.jsonl
 *.bin
+
+# macOS Finder metadata
+.DS_Store

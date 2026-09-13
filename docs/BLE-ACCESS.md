@@ -132,12 +132,19 @@ normally.
 > up to 263 W motor draw; 0 of the refused set flipped), and — tested 2026-08-12 — they also
 > `DENIED` a **SUBSCRIBE**, which matters because several addresses on this bus answer a
 > subscribe while refusing a plain read. That possibility is now ruled out here, with a positive
-> control in the same session seconds earlier: `18-57` `REACHABLE_RANGE`, which *also* refuses a
-> read, subscribed successfully and pushed its value (per-assist-mode ranges 136 / 87 / 72 / 69).
+> control in the same session seconds earlier: `18-57` `REACHABLE_RANGE` subscribed successfully
+> and pushed its value (per-assist-mode ranges 136 / 87 / 72 / 69).
 > So the subscribe mechanism demonstrably works on this bike and these four fields still refuse
 > it — a privilege boundary, not a wrong-verb artifact. If you need them, you need the USB path.
 > The only voltage BLE gives you is `A1-C1` — the *remote's* internal battery (~4.185 V), not the
 > pack.
+>
+> *Correction (2026-09-13): `98-57` was previously described here as a field that "also refuses a
+> read". It does not. It answers a **READ** (`30 05 40 80 98 57 00` →
+> `30 0C 18 57 C0 80 10 0A 05 87 01 57 48 44`, 88 ms), a **SUBSCRIBE**, and the **passive stream**.
+> It remains a valid positive control for the subscribe path — just not an example of a
+> read-refusing field. The genuine read-refusing / subscribe-answering cases on this bike are
+> `80-AF` `ISSUE_VISUALIZATION_EVENT` and `A2-82` `SUPPORTED_TILE_IDS`.*
 
 ## The BLE request/response grammar
 

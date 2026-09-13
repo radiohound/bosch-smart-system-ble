@@ -91,7 +91,7 @@ Telemetry arrives on three BLE characteristics, all under Bosch's one vendor ser
 | `0x98‑84` | **Drive‑unit PCB temperature** | **request‑only** — reads ~23–27 °C at `zigzag(raw)/10`, warmer under load. `DriveUnit.PRESENT_PCB_TEMPERATURE` | ? |
 | `0xA1‑C1` | **Remote internal battery** voltage | ~**4.185 V** (÷1000) — the remote/head‑unit's *own* cell, **not** the traction pack. `RemoteControl.INTERNAL_BATTERY_VOLTAGE`. The **only voltage readable over BLE** (pack voltage `80-8C` is USB‑only) | ? |
 | `0x80‑93` | **Max allowed discharge current** | raw is **milliamps** → **÷ 1000** = A: 60000 → **60.0 A** — a protection ceiling (a 600 W peak pulls only ~17 A). `Battery.MAXIMUM_ALLOWED_DISCHARGE_CURRENT`. Live current `80-94` is **USB‑only, refused over BLE even under load** | ✓ᵃ |
-| `0x98‑57` | **Per‑mode range estimates** | one byte per configured mode, km (e.g. `27 1f 14 10` = 39/31/20/16 km); identical to LDI field 3; recomputes with riding style, declines with SoC | ✓ᵃ |
+| `0x98‑57` | **Per‑mode range estimates** | **packed varints**, one value per configured mode, km — e.g. `87 01 57 48 44` = **135 / 87 / 72 / 68 km** (four modes). **Not one byte per mode:** a value ≥128 takes two bytes (`87 01` = 135), and a byte‑per‑mode reader invents a phantom extra mode reading 1 km. (The older example `27 1f 14 10` = 39/31/20/16 decodes the same either way only because every value is <128.) Identical to LDI field 3; recomputes with riding style, declines with SoC | ✓ᵃ |
 | `0xA2‑43` | **Activity moving time** | `DURATION_WITHOUT_STOPS_OF_ACTIVITY` — ride time excluding stops. **Corrects the earlier "not temperature ✗" debunk** — it's a real field, auto‑pushes during rides; value unit not yet pinned | ◐ |
 | `0xA2‑54` | **Rider energy share** | **% of total propulsion energy contributed by the rider** — the bike's *native* rider‑vs‑motor split. Validated: the whole‑ride value matches ∫`98‑5B` ÷ (∫`98‑5B` + cadence‑gated ∫`98‑5D`) within **1–2%** on three rides (44≈43%, 36≈37%, 36≈35%). Converges as energy accumulates — use the late/final value. `RemoteControl.RIDER_ENERGY_SHARE` | ✓ᵃ |
 | `0xA2‑4A` | **Average rider power** (activity) | watts, same scale as `98‑5B` — e.g. 181 W | ✓ᵃ |
@@ -232,7 +232,7 @@ request-only.
 | `98‑46` | UDAM_MODIFICATION_POSSIBLE | — | — | auto | ◐ |
 | `98‑4E` | ACTIVE_ASSIST_MODES | — | string list | auto | ✓ |
 | `98‑55` | BIKE_CATEGORY | — | — | auto | ◐ |
-| `98‑57` | REACHABLE_RANGE | Reachable Range (per mode, km) | one byte/mode (km) | auto | ✓ |
+| `98‑57` | REACHABLE_RANGE | Reachable Range (per mode, km) | **packed varints**, one per mode (km) — ≥128 takes 2 bytes | auto | ✓ |
 | `98‑5E` | OEM_BIKE_ID | — | — | auto | ◐ |
 | `98‑5F` | OEM_MANUFACTURING_LOCATION | — | — | auto | ◐ |
 | `98‑61` | OEM_MANUFACTURING_DATE | — | — | auto | ◐ |
@@ -484,7 +484,7 @@ smart system control‑unit firmware **v19+**.
 | 14 | **Trip max speed** | ÷ 100 = km/h; running max of field 1, exact in 83/83 samples | ✓ᵃ |
 | 16 | **Trip ride time** | seconds; 1.000/s while moving, frozen while standstill (field 25) is set | ✓ᵃ |
 | 15 | Odometer snapshot at ride start | updates when standstill clears | ? |
-| 3 | **Per‑mode range estimates** (km) | = diag `98-57`, one byte per configured mode | ✓ᵃ |
+| 3 | **Per‑mode range estimates** (km) | = diag `98-57`, **packed varints**, one per configured mode (≥128 takes 2 bytes) | ✓ᵃ |
 | 18 | Shift recommendation? | pulses 1→2 or 1→3 for a few seconds while riding (derailleur bike) | ? |
 | 19, 20, 27 | unknown / constants | — | — |
 

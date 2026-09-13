@@ -64,9 +64,14 @@ applied to the address before routing, so this is a hard wall, not a readiness s
 
 A `DENIED` answer to a READ only proves the *read verb* was refused. MCSP has others,
 and on this bus some datapoints refuse a one-shot read while answering a subscribe —
-`DriveUnit.REACHABLE_RANGE` is the known case over BLE, and Flow itself only ever
-reads it via `.subscribe()`. So the wall above needed testing with a second verb
-before it could be called a wall at all.
+`Battery.ISSUE_VISUALIZATION_EVENT` (`80-AF`) and `RemoteControl.SUPPORTED_TILE_IDS`
+(`A2-82`) are the known cases over BLE. So the wall above needed testing with a second
+verb before it could be called a wall at all.
+
+> *Correction (2026-09-13): `DriveUnit.REACHABLE_RANGE` was cited here as the known case.
+> It is not one — it answers a READ as well as a SUBSCRIBE (see
+> [BLE-ACCESS.md](BLE-ACCESS.md)). Flow does only ever read it via `.subscribe()`, but that
+> is Flow's choice, not a refusal by the bike.*
 
 It has been. **Every one of the 417 addresses that answers `DENIED` to a READ over USB
 was re-tried with SUBSCRIBE. All 417 refused that too** — a well-formed

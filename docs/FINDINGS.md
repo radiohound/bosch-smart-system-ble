@@ -59,14 +59,23 @@ deep per-field verification the CX has. So it is "one model deeply, a second pre
 ## 1. How the data is framed
 
 The diagnostic channel sends **length-prefixed frames**, and a single Bluetooth notification
-can pack several of them back to back. The first byte of each frame says what kind it is:
+can pack several of them back to back. Each frame carries a **2-byte MCSP segmentation
+header**:
 
-| First byte | What it is |
-|-----------|------------|
-| `0x30` | **component telemetry** — the fields you actually want (motor power, etc.) |
-| `0x10` | short periodic status |
-| `0x20` | session establishment / handshake (component names, part numbers) |
-| `0x60` / `0x70` | stored-log file transfer (the bike's on-board "flight recorder") |
+```
+byte0 = (channel << 5) | (endOfChannel ? 0x10 : 0) | ((len >> 8) & 0x0f)
+byte1 = len & 0xff
+```
+
+So the first byte is **not a message-type tag** — it is three packed fields. That is why the
+values you actually see look like a small fixed set:
+
+| First byte | Channel | End of message? | What it turns out to be |
+|-----------|---------|-----------------|--------------------------|
+| `0x30` | 1 — message bus | yes | **component telemetry and every read/write/RPC reply** — the normal case |
+| `0x20` | 1 — message bus | **no** | a **continuation**: this message is longer than one frame and continues in the next |
+| `0x10` | **0 — command** | yes | **MCSP flow control**, not application data |
+| `0x60` / `0x70` | 3 — LBTP push | no / yes | stored-log file transfer (the bike's on-board "flight recorder") |
 
 A telemetry frame is a tiny protobuf:
 
@@ -75,7 +84,43 @@ A telemetry frame is a tiny protobuf:
 ```
 
 So `<idHi><idLo>` (like `98 5D`) is the field's ID, and the number after tag `08` is its value.
-To read a notification: split it on `0x30` boundaries first, then decode each frame.
+
+The channel/segmentation layer, the reassembly rules and the measured frame sizes are
+covered in full in **[TRANSPORT.md](TRANSPORT.md)**.
+
+**To read a notification, walk the headers — do not split on `0x30`.** Read 2 bytes, take
+`len` from them, consume `len` payload bytes, repeat until the buffer is exhausted. Splitting
+on `0x30` boundaries breaks on continuation frames and on any payload byte that happens to
+equal `0x30`, and it fails silently.
+
+> **Correction (2026-09-13).** This section previously described the first byte as a
+> frame-*type* tag, with `0x10` as "short periodic status" and `0x20` as "session
+> establishment / handshake", and advised splitting on `0x30`. The observations behind that
+> were real — `0x20` frames genuinely do cluster around session establishment — but the
+> explanation was wrong: `0x20` appears there because the connection-open config dump is
+> where the long, multi-frame messages are. Corrected against 5,648 frames from 9 captures:
+>
+> - Walking the headers consumes **3,765 of 3,765** notifications on `0x0011` with **zero
+>   leftover bytes**. Only three header values occur — `0x30` (5,621), `0x10` (19),
+>   `0x20` (8) — and the low nibble is `0` in every one, consistent with every payload
+>   being under 256 bytes.
+> - **All 19 `0x10` frames carry a payload beginning `02`** — `CommandType 0x02`,
+>   `ADVANCE_TRANSMIT_WINDOW`. A uniform command opcode is not "periodic status"; it is the
+>   bike running MCSP flow control on channel 0, unprompted, whether or not the client ever
+>   negotiated it.
+> - The `0x20` frames only make sense as continuations. Reassembling one with the `0x30`
+>   that follows yields a single coherent message — e.g. a 242-byte fragment plus its
+>   remainder forms a 251-byte reply whose body is a well-formed `0a f3 01 …` (protobuf
+>   field 1, length 243). The 242-byte fragment does not parse on its own.
+> - The header definition is independently sourced: it is the encoder in `bes3-reader`'s
+>   BLE-MCSP transport, derived from the Flow decompile — and it matches our own note that
+>   the USB side's historical `BLOCK_OP = 0x30` constant "turned out to just be this exact
+>   header for channel 1, end-of-channel set, and a payload under 256."
+>
+> Largest single frame observed is **242 bytes** (MTU 247 minus ATT and header overhead) and
+> the largest **reassembled** message **251 bytes**; no frame has ever declared a length
+> above 255 here, across 5,648 frames. The `0x60`/`0x70` rows are from an earlier iOS
+> capture and have not been re-verified against this parse.
 
 ## 2. What the fields mean (and how we know)
 

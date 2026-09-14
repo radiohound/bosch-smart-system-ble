@@ -20,8 +20,12 @@ against Flow's own decompiled encoder (`com.bosch.ebike.onebikeapp`, class `Tile
 The navigation traffic rides the **same undocumented diagnostic characteristic** as telemetry:
 `0x0011` (notify, drive-unit → phone) and `0x0012` (write, phone → drive-unit, ATT handle `0x0021`),
 under the vendor service tree (base `…-eaa2-11e9-81b4-2a2ae2dbcce4`). Everything below is one or more
-**length-prefixed `0x30` frames** packed into an ATT write or notification — split on the `0x30`
-boundary first (`30 <len> <body>`), then interpret each body by its first bytes.
+**length-prefixed frames** packed into an ATT write or notification. In practice they all look
+like `30 <len> <body>` here, because `0x30` is the MCSP segmentation header for "channel 1,
+end of message, body under 256 bytes" — which every frame in this protocol is. **Parse them by
+walking the headers, not by splitting on the byte `0x30`** (read 2 bytes, take `len`, consume
+`len` bytes, repeat); see [TRANSPORT.md §3](TRANSPORT.md). Then interpret each body by its
+first bytes.
 
 There are **two body shapes** on this channel:
 

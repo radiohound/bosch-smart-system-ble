@@ -19,19 +19,34 @@ plausible but unconfirmed · **◐** read over BLE, scaling not yet verified · 
 
 This is the device-intrinsic layer — what the Bosch Smart System actually puts on the wire,
 decodable from **any** capture (nRF Connect, an Android HCI-snoop log, Wireshark, your own app), no
-particular tool required. A single BLE notification packs several length-prefixed frames; the first
-byte of each is its type.
+particular tool required. A single BLE notification packs several length-prefixed frames, each
+carrying a **2-byte MCSP segmentation header** — *not* a type byte:
 
-| type | meaning |
-|------|---------|
-| **`0x30`** | **component telemetry** — the fields you want (motor power etc.) |
-| `0x40` | additional telemetry frames (seen alongside `0x30`; not yet fully decoded) |
-| `0x10` | short periodic status |
-| `0x20` | session establishment / handshake |
-| `0x60` / `0x70` | stored-log file transfer → the `.bin` set (index + per-component logs) — **see "Stored-log files" below** |
+```
+byte0 = (channel << 5) | (endOfChannel ? 0x10 : 0) | ((len >> 8) & 0x0f)
+byte1 = len & 0xff
+```
 
-If a capture has only `0x10` and no `0x30`, it was on a **status-only** connection (another
-device held the telemetry session) — no motor data in it.
+Which is why the first bytes you see fall into a small fixed set:
+
+| first byte | channel | end of message? | what it is |
+|------------|---------|-----------------|------------|
+| **`0x30`** | 1 — message bus | yes | **component telemetry** and every read/write/RPC reply — the frames you want |
+| `0x20` | 1 — message bus | **no** | a **continuation** — this message is longer than one frame |
+| `0x10` | **0 — command** | yes | MCSP **flow control**, not application data |
+| `0x40` | **2 — LBTP pull** | no | a different logical channel (previously listed here as "additional telemetry, not yet decoded") |
+| `0x60` / `0x70` | 3 — LBTP push | no / yes | stored-log file transfer → the `.bin` set — **see "Stored-log files" below** |
+
+If a capture has only `0x10` and no `0x30`, **the MCSP transport is up but the message bus is
+serving someone else** — another device holds the telemetry session, so you get flow-control
+frames and no motor data. (Previously described as a "status-only" connection; the diagnosis
+is the same, the explanation is not.)
+
+> **Correction (2026-09-13).** The table above previously presented the first byte as a
+> frame-*type* tag. It is a packed header. See **[TRANSPORT.md §3](TRANSPORT.md)** for the
+> channel map, reassembly rules and measured frame sizes, and for the evidence — notably that
+> every `0x10` frame observed carries a `CommandType 0x02` (`ADVANCE_TRANSMIT_WINDOW`)
+> payload, which is flow control rather than status.
 
 **Decoding a `0x30` telemetry frame:**
 
@@ -42,7 +57,9 @@ device held the telemetry session) — no motor data in it.
 - `<idHi><idLo>` = the message id (e.g. `98 5D`).
 - Payload is a one-field protobuf: tag `08`, then a base-128 **varint** = the value.
 - Text fields use tag `0A` + length + string instead of `08` + varint.
-- Split the notification on `0x30` boundaries first (each frame is `30 len …`, `len` bytes of body).
+- **Walk the headers; do not split on `0x30`.** Read 2 bytes, take `len` from them, consume
+  `len` payload bytes, repeat. Splitting on a byte value breaks on continuation frames and on any
+  payload byte that happens to equal `0x30`, and it fails silently.
 
 ### Channels
 
@@ -443,7 +460,9 @@ smart system control‑unit firmware **v19+**.
 > rotating BLE MAC while *scanning* but won't use the IRK to *initiate* a connection; dedicated LDI
 > computers sidestep it with a static random MAC. The central/diagnostic path is unaffected — but
 > don't attempt the peer path on a bike you care about. (Reported on r/BoschSmartSystem by
-> u/InvestigatorSenior.)
+> u/InvestigatorSenior.) **See [TRANSPORT.md §1](TRANSPORT.md) for why the mechanism cannot
+> reach the phone-as-central path, where the bond actually lives, and what the bike will and
+> won't let you do to its bond databases.**
 - A GATT **read** returns a full snapshot of all values (§2.2.3.2); **notifications** carry
   changes and **may omit unchanged fields** — absence ≠ stale (§2.2.4.3).
 - Payload: one proto3 message, all documented fields varint.

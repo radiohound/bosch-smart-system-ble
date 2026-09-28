@@ -54,7 +54,10 @@ is the same, the explanation is not.)
 30 <len> <idHi> <idLo> 08 <varint>
 ```
 
-- `<idHi><idLo>` = the message id (e.g. `98 5D`).
+- `<idHi><idLo>` = the message id (e.g. `98 5D`), **big‑endian, high byte first**. Bit 15 is a
+  flag: the registry/Flow address is `id & 0x7FFF` (`0x185D`). Clear only that bit, because
+  `0x4000` is part of the address (MobileApp range). See
+  [TRANSPORT.md › Address encoding](TRANSPORT.md#address-encoding).
 - Payload is a one-field protobuf: tag `08`, then a base-128 **varint** = the value.
 - Text fields use tag `0A` + length + string instead of `08` + varint.
 - **Walk the headers; do not split on `0x30`.** Read 2 bytes, take `len` from them, consume

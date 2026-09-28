@@ -251,8 +251,30 @@ tested the identity as a variable directly — two clients, `0x4080` and `0x4180
 the privilege wall**; getting it "more correct" unlocks nothing. (It may still matter for
 particular strict RPCs; we have no positive case either way.)
 
-> **If you rewrite addresses at a transport boundary, mask only the low 7 bits.** The top bit
-> of the echoed destination is the **success flag**, not part of the address. Forcing it to 1
+### Address encoding
+
+Every address on the wire is **2 bytes, big‑endian: high byte first.** `98 5D` is `0x985D`,
+never `0x5D98`.
+
+- **Bit 15 (`0x8000`) is a flag, not part of the address.** A field streams as `98‑5D` but its
+  read reply echoes `18‑5D`. The address itself is `wire & 0x7FFF` (`0x185D`). That is the form
+  the Flow decompile and the bes3‑reader registry use. Our BLE ids (`98‑5D`, `80‑E2`) are written
+  with the bit set because that is how they stream. Both forms name the same field.
+- **Clear bit 15 only.** Every other bit belongs to the address. In particular `0x4000` marks the
+  **MobileApp** range (`0x40xx`, the fields the phone itself provides): `0x40A9` is
+  `STARTUP_STAGE`, while `0x00A9` is an unrelated Battery RPC.
+- **Component ranges** (address form, from the Flow decompile): Battery `0x00xx`, second battery
+  `0x02xx`, ABS `0x09xx`, ConnectModule `0x0Axx–0x0Bxx`, HeadUnit `0x0Cxx–0x0Dxx`, DriveUnit
+  `0x10xx`/`0x18xx`, RemoteControl `0x20xx–0x23xx`, MobileApp `0x40xx`. Apart from the MobileApp
+  gateway and broker addresses above, **no datapoint exists above `0x40AB`**.
+
+**Sanity check for a parser:** a value outside those ranges, a value that becomes a known
+address when its bytes are swapped, or two printable ASCII bytes (`30 30` = "00") is not an
+address. It is a byte‑order error or a frame read at the wrong offset. Walk the headers (§3).
+
+> **If you rewrite addresses at a transport boundary, change only the low 15 bits (`& 0x7FFF`)
+> and carry bit 15 through untouched.** That top bit of the echoed destination is the
+> **success flag**, not part of the address. Forcing it to 1
 > makes every `DENIED` / `NOT_READY` / `NO_ROUTE_FOUND` reply get misread as a successful
 > 1-byte payload — corrupting both the ok/declined counts *and* the payload offset. This is
 > not hypothetical; it was a real bug in the reference implementation, fixed once the status

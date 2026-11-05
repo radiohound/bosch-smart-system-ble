@@ -52,3 +52,14 @@ A2-56,Trick stats,jump/trick detection,candidate,reads 1/2 on some rides; count-
 90-93,Mode parameters (write),UdamParams,verified,resends ALL six fields; arg wraps the ConfigId (0a 0c 0a 0a); C0+empty = refused
 90-94,Reset one mode to factory,ConfigId -> bool,verified,bare ConfigId arg; confirmed to apply 90-91 field for field
 98-74,Max available motor power,watts,verified,f1 PRODUCT_LINE = the ceiling; f3 is only the selected mode f5 echoed - NOT capability
+98-7D,Regional speed configuration,enum (2 = US/CA/NZ 20 mph; 7 = US 28 mph; 1 = EU/AU 25 km/h),candidate,"CX reads 2 on a 20 mph bike; schema from bes3-reader PR #9 (BDT3 decompile)"
+98-13,Maximum legal bike speed,raw / 100 = km/h,candidate,32.00 km/h on a 20 mph bike (consistent with CX reading)
+98-17,Maximum assistance speed,raw / 100 = km/h,candidate,32.50 km/h (consistent with CX reading)
+98-55,Bike category,enum (1 city / 2 trekking / 3 MTB tour / 4 MTB trail / 5 road / 6 gravel / 8 cargo ...),candidate,"CX (Moterra) reads 4 = MTB trail; schema from bes3-reader PR #9 (BDT3 decompile)"
+98-26,Walk assist configuration,{1 enabled; 2 maxSpeed raw / 100 = km/h},candidate,schema from bes3-reader PR #9 (BDT3 decompile)
+98-25,Walk assist configuration (OEM),flat {1: 1; 2: 400} = enabled + 4.00 km/h,candidate,"registry schema (nested submessage + bool) does NOT match the flat varints we read"
+98-96,OEM torque limitation,{1 status enum 0/1/2 = uninit/disabled/enabled; 2 maxMotorTorque},candidate,schema from bes3-reader PR #9 (BDT3 decompile)
+98-2F,Rear wheel circumference limits,{1 min; 2 max} raw / 10 = mm,candidate,2185.0-2415.0 mm (consistent with CX reading)
+A1-65,eShift gear cadence setpoint,rpm,candidate,reads 65 even without eShift
+98-80,Drive unit static feature properties,bool per sub-field (IMU / eshift / trickCheck / rangeControl ...),candidate,schema from bes3-reader PR #9 (BDT3 decompile)
+A1-0B,Remote static feature properties,bool per sub-field (heartRate / dualBattery ...),candidate,schema from bes3-reader PR #9 (BDT3 decompile)

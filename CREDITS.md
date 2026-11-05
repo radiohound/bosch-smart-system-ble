@@ -37,6 +37,9 @@ to the verified rows; several independent confirmations. The two most central pr
 Leiser's BikeBridge** (the HCI-snoop method + the SX captures) — are detailed above; further
 corroborations:
 
+- **KebsCS — [`bes3-reader` PR #9](https://github.com/rweijnen/bosch-bes3-reader/pull/9)** — value
+  schemas (enums, protobuf sub-fields, scale factors) for 257 registry entries, from Bosch's
+  diagnostic tool; the source of the "Value schemas" table in the decoder card.
 - **Nilogax/SmartBridge** (Android + XIAO nRF52840 → Garmin) — agrees byte-for-byte on the
   `0011` channel fields.
 - **bestie-org/BEStie** (phone-free nRF52840, FTMS) — bundles the official Bosch `.proto`,

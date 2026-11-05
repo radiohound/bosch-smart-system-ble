@@ -131,6 +131,55 @@ Telemetry arrives on three BLE characteristics, all under Bosch's one vendor ser
 | `0x80‑C5` | exact duplicate of `80-91` | — | ✓ᵃ |
 | `0x10‑90…92` | Per‑mode tune parameters | support %, max torque (40/85 Nm), max power (600 W)… | ? |
 
+### Value schemas from Bosch's diagnostic tool
+
+Remko's registry long had names and addresses for these but no **value layout**. KebsCS's
+[`bes3-reader` PR #9](https://github.com/rweijnen/bosch-bes3-reader/pull/9) (Nov 2026, open at time of
+writing) fills in types, enum tables and protobuf sub-fields for 257 entries, taken from the
+protobuf classes in Bosch's diagnostic tool (BDT3 16.8.10). Below are the ones that **answer over BLE**
+on our bike, with our CX reading as a cross-check where we have one. Schemas are Bosch's; a ✓ in the
+last column means our value is consistent with it, not that every sub-field is byte-proven.
+
+| id | field | schema (protobuf field: meaning) | our CX value | fits? |
+|----|-------|----------------------------------|--------------|:----:|
+| `98‑7D` | **REGIO_SPEED_CONFIGURATION** | enum: 0 unspecified · 1 EU/AU 25 km/h · **2 US/CA/NZ 20 mph** · 3 JP 24 km/h · 4 KR 25 km/h · 5 TW 25 km/h · 6 EU 45 km/h · **7 US 28 mph** · 8 EU athlete 25 km/h · 9 US athlete 20 mph · 10+ further regions | `2` → US/CA/NZ 20 mph | ✓ |
+| `98‑13` / `98‑17` / `98‑42` | Max legal / assistance / assistance (IBD) speed | uint ÷100 = km/h | 32.00 / 32.50 / 33.50 km/h (≈20 mph legal cut-off) | ✓ |
+| `98‑55` | **BIKE_CATEGORY** | enum: 0 not configured · 1 city · 2 trekking · 3 MTB tour · **4 MTB trail** · 5 road · 6 gravel · 7 kids · 8 cargo · 9 fleet · 10 others · 11 e-cargo long tail · 12 compact | `4` → MTB trail (a Moterra) | ✓ |
+| `98‑26` | WALK_ASSIST_CONFIGURATION | `{1 enabled: bool, 2 maximumSpeed: uint ÷100 km/h}` | `1` (enabled; f2 not captured) | ◐ |
+| `98‑25` | WALK_ASSIST_CONFIGURATION_OEM | registry: `{1 walkAssistConfiguration: submessage, 2 walkAssistConfigurable: bool}` | raw `08 01 10 90 03` = `{1: 1, 2: 400}` — **flat varints**, which reads as enabled + **4.00 km/h**, i.e. the `98‑26` layout, not the nested one | **✗** schema mismatch |
+| `98‑96` | OEM_TORQUE_LIMITATION | `{1 status: enum 0 uninitialized / 1 disabled / 2 enabled, 2 maximumMotorTorque: uint}` | (request-only, not in capture) | ◐ |
+| `98‑1F` | BIKE_LIGHT_CONFIGURATION_OEM | `{1 bikeLightConfiguration: enum 0 always off / 1 always on / 2 on after startup / 3 off after startup / 4 use status at shutdown, 2 bikeLightAvailableOem: bool, 3 bikeLightConfigurable…}` | (request-only) | ◐ |
+| `98‑2F` | REAR_WHEEL_CIRCUMFERENCE_USER_LIMITS | `{1 minimumCircumference, 2 maximumCircumference}` ÷10 mm | 2185.0–2415.0 mm | ✓ |
+| `98‑74` | MAXIMUM_AVAILABLE_MOTOR_POWER | `{1 productLine, 2 availableAssistModes, 3 selectedAssistMode}` | already verified above — f1 is the ceiling | ✓ |
+| `A1‑65` | CURRENT_GEAR_CADENCE_SETPOINT | uint, rpm (eShift target cadence) | `65` — present even on our non-eShift bike | ◐ |
+| `A1‑63` | CURRENT_GEAR_OR_RATIO | `{1 gear: uint, 2 ratio: uint}` | supported-empty on our bike (no eShift) | ◐ |
+| `A1‑83` | TIME_FORMAT | enum: 0 = 24 h · 1 = 12 h | — | ◐ |
+
+**Feature bitmaps** — each is a submessage of bools, one per capability. They answer passively and
+make a cheap per-bike capability fingerprint (our capture only rendered field 1, so the per-bike
+values below are still to collect):
+
+| id | field | sub-fields (1, 2, 3 …) |
+|----|-------|------------------------|
+| `98‑12` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE1 | walkAssist · componentLockingSupport · bikeLightSupplier · userDataStorage · crashDetection |
+| `98‑70` | …RELEASE2 | shiftRecommendation |
+| `98‑71` | …RELEASE3 | serviceCharge · regionInformation |
+| `98‑80` | DRIVE_UNIT_STATIC_FEATURE_PROPERTIES | powerCycleIssueList · inertialMeasurementUnit · eshift · systemDerating · eDriveAutomaticMode · trickCheck · rangeControl · activeAssistModesResetToDefault … |
+| `A1‑0B` | REMOTE_CONTROL_STATIC_FEATURE_PROPERTIES | controlMotorSupport · snooze · heartRate · averageAndMaximumHeartRate · dualBatteryRouting · dualBatterySoftwareUpdate · powerCycleIssueList · … |
+| `8D‑84` | HEAD_UNIT_STATIC_FEATURE_PROPERTIES | (per the registry; head-unit capability bools) |
+
+> **Remote button events.** The registry now gives `A0‑42` BUTTON_EVENT a schema —
+> `{1 type: enum 0 press · 1 long press · 2 short release · 3 long release · 4 repeat · 5 extra-long press ·
+> 6 extra-long release, 2 button: submessage, 3 timestamp}` — but it is **refused over BLE**
+> (`UNSUPPORTED`), as are `A0‑43` SIMULATE_BUTTON_EVENT and `A2‑0D` BLE_BUTTON_EVENT (`DENIED`).
+> `A0‑44` BUTTON_EVENTS_ENABLED is a **command we have not yet tried**; it is the one open route to raw
+> remote presses over BLE.
+
+> **Scaling we disagree with.** The PR keeps battery currents at **÷10 A**. Our `80‑93` reads 60000,
+> which is 60.0 A only at **÷1000 (mA)** — ÷10 would give an implausible 6000 A. The other current
+> fields (`80‑94`, `80‑C6`…`80‑CB`) are USB-only or refused over BLE, so we can't check them, but they
+> likely share the mA scale.
+
 > **Capture note — catch the bike's power-on.** Which fields you get depends on **when you
 > subscribe**, not on hardware or firmware. Subscribe **at the bike's boot** (power-cycle the bike
 > with the app already connected) and you get the FULL set: both speed fields (`98-08` + `98-2D`),
@@ -224,15 +273,15 @@ request-only.
 | `98‑0E` | ASSIST_MODE_COLORS | — | RGBA varint per mode | auto | ✓ |
 | `98‑0F` | AVAILABLE_ASSIST_MODES_UPPER | — | — | auto | ◐ |
 | `98‑11` | DISTRACTED_RIDING_ALERT | — | — | auto | ◐ |
-| `98‑12` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE1 | — | — | auto | ◐ |
-| `98‑13` | MAXIMUM_LEGAL_BIKE_SPEED | — | km/h | req | ◐ |
-| `98‑17` | MAXIMUM_ASSISTANCE_SPEED | — | km/h | auto | ◐ |
+| `98‑12` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE1 | Feature bitmap — bool per sub-field (see [schemas](#value-schemas-from-boschs-diagnostic-tool)) | bools | auto | ◐ |
+| `98‑13` | MAXIMUM_LEGAL_BIKE_SPEED | — | ÷100 km/h | req | ◐ |
+| `98‑17` | MAXIMUM_ASSISTANCE_SPEED | — | ÷100 km/h | auto | ◐ |
 | `98‑18` | ODOMETER | — | metres | auto | ✓ |
 | `98‑19` | POWER_ON_TIME | Power-On Time | s | auto | ◐ |
 | `98‑1A` | BIKE_NOT_DRIVING | Bike detected as not driving (motor cut-off state) | — | auto | ◐ |
 | `98‑1D` | ROAD_SLOPE | — | raw (gradient) | auto | ◐ |
-| `98‑25` | WALK_ASSIST_CONFIGURATION_OEM | — | — | auto | ◐ |
-| `98‑26` | WALK_ASSIST_CONFIGURATION | — | — | auto | ◐ |
+| `98‑25` | WALK_ASSIST_CONFIGURATION_OEM | OEM walk-assist config (see [schemas](#value-schemas-from-boschs-diagnostic-tool)) | — | auto | ◐ |
+| `98‑26` | WALK_ASSIST_CONFIGURATION | `{1 enabled, 2 maximumSpeed}` (see [schemas](#value-schemas-from-boschs-diagnostic-tool)) | f2 ÷100 km/h | auto | ◐ |
 | `98‑27` | PRODUCT_LINE | — | — | auto | ◐ |
 | `98‑28` | REAR_WHEEL_CIRCUMFERENCE_OEM | Rear Wheel Circumference (OEM) | ÷10 mm (OEM default) | auto | ◐ |
 | `98‑29` | REAR_WHEEL_CIRCUMFERENCE_USER | Rear Wheel Circumference (User) | ÷10 mm | auto | ✓ |
@@ -240,7 +289,7 @@ request-only.
 | `98‑2B` | GEARING_SYSTEM | — | — | auto | ◐ |
 | `98‑2C` | BIKE_ID | eBike ID | — | auto | ◐ |
 | `98‑2E` | PRODUCT_NAME | — | — | auto | ◐ |
-| `98‑2F` | REAR_WHEEL_CIRCUMFERENCE_USER_LIMITS | — | — | auto | ◐ |
+| `98‑2F` | REAR_WHEEL_CIRCUMFERENCE_USER_LIMITS | `{1 minimumCircumference, 2 maximumCircumference}` | ÷10 mm | auto | ◐ |
 | `98‑37` | MANUFACTURING_DATE | — | — | auto | ◐ |
 | `98‑38` | PRODUCT_APPLICATION_REQUIRED | — | — | auto | ◐ |
 | `98‑39` | PRODUCT_APPLICATION_AVAILABLE | — | — | auto | ◐ |
@@ -248,10 +297,10 @@ request-only.
 | `98‑3B` | GEARSHIFT_APPLICATION_AVAILABLE | — | — | auto | ◐ |
 | `98‑3C` | REGIO_SPEED_APPLICATION_REQUIRED | — | — | auto | ◐ |
 | `98‑3D` | REGIO_SPEED_APPLICATION_AVAILABLE | — | — | auto | ◐ |
-| `98‑42` | MAXIMUM_ASSISTANCE_SPEED_IBD | Maximum Assistance Speed (IBD) | km/h | auto | ◐ |
+| `98‑42` | MAXIMUM_ASSISTANCE_SPEED_IBD | Maximum Assistance Speed (IBD) | ÷100 km/h | auto | ◐ |
 | `98‑46` | UDAM_MODIFICATION_POSSIBLE | — | — | auto | ◐ |
 | `98‑4E` | ACTIVE_ASSIST_MODES | — | string list | auto | ✓ |
-| `98‑55` | BIKE_CATEGORY | — | — | auto | ◐ |
+| `98‑55` | BIKE_CATEGORY | Bike category enum (see [schemas](#value-schemas-from-boschs-diagnostic-tool)) | enum | auto | ◐ |
 | `98‑57` | REACHABLE_RANGE | Reachable Range (per mode, km) | **packed varints**, one per mode (km) — ≥128 takes 2 bytes | auto | ✓ |
 | `98‑5E` | OEM_BIKE_ID | — | — | auto | ◐ |
 | `98‑5F` | OEM_MANUFACTURING_LOCATION | — | — | auto | ◐ |
@@ -261,19 +310,19 @@ request-only.
 | `98‑69` | REQUIRED_ASSIST_MODES_LOWER | — | — | auto | ◐ |
 | `98‑6C` | OEM_BRAND_NAME | — | — | auto | ◐ |
 | `98‑6D` | POWER_ON_TIME_WITH_MOTOR_SUPPORT | Power-On Time (Motor Support) | s | auto | ◐ |
-| `98‑70` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE2 | — | — | auto | ◐ |
-| `98‑71` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE3 | — | — | auto | ◐ |
+| `98‑70` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE2 | Feature bitmap — bool per sub-field (see [schemas](#value-schemas-from-boschs-diagnostic-tool)) | bools | auto | ◐ |
+| `98‑71` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE3 | Feature bitmap — bool per sub-field (see [schemas](#value-schemas-from-boschs-diagnostic-tool)) | bools | auto | ◐ |
 | `98‑74` | MAXIMUM_AVAILABLE_MOTOR_POWER | — | three varints (W); use **f1** (see above) | auto | ✓ |
 | `98‑75` | OEM_BIKE_MODEL_ID | — | — | auto | ◐ |
 | `98‑7A` | DRIVE_UNIT_FEATURE_PROPERTIES_RELEASE4 | Feature-properties bitset, release 4 | — | auto | ◐ |
-| `98‑7D` | REGIO_SPEED_CONFIGURATION | Regional Speed Configuration ("Speed ID") | — | auto | ◐ |
-| `98‑80` | DRIVE_UNIT_STATIC_FEATURE_PROPERTIES | — | — | auto | ◐ |
+| `98‑7D` | REGIO_SPEED_CONFIGURATION | Regional Speed Configuration ("Speed ID") — enum (see [schemas](#value-schemas-from-boschs-diagnostic-tool)) | enum | auto | ◐ |
+| `98‑80` | DRIVE_UNIT_STATIC_FEATURE_PROPERTIES | Feature bitmap — bool per sub-field (see [schemas](#value-schemas-from-boschs-diagnostic-tool)) | bools | auto | ◐ |
 | `98‑84` | PRESENT_PCB_TEMPERATURE | — | zigzag/10°C (registry) | req | ◐ |
 | `98‑8B` | ASSIST_MODE_LIMITS | Per-mode assist limits | — | auto | ◐ |
 | `98‑8C` | MAXIMUM_CONFIGURED_DISCHARGE_CURRENT | Configured max battery discharge current | A | auto | ◐ |
-| `98‑1F` | BIKE_LIGHT_CONFIGURATION_OEM | Bike Light Configuration Oem | — | req | ◐ |
+| `98‑1F` | BIKE_LIGHT_CONFIGURATION_OEM | `{1 light config enum, 2 available, 3 configurable…}` (see [schemas](#value-schemas-from-boschs-diagnostic-tool)) | — | req | ◐ |
 | `98‑35` | COMPONENT_LOCK_CONFIGURATION | Component Lock Configuration | — | req | ◐ |
-| `98‑96` | OEM_TORQUE_LIMITATION | Oem Torque Limitation | — | req | ◐ |
+| `98‑96` | OEM_TORQUE_LIMITATION | `{1 status enum, 2 maximumMotorTorque}` (see [schemas](#value-schemas-from-boschs-diagnostic-tool)) | — | req | ◐ |
 
 
 ### Battery (30)
@@ -346,14 +395,14 @@ request-only.
 | `A1‑08` | REMOTE_CONTROL_FEATURE_PROPERTIES_RELEASE2 | — | — | auto | ◐ |
 | `A1‑09` | REMOTE_CONTROL_FEATURE_PROPERTIES_RELEASE3 | — | — | auto | ◐ |
 | `A1‑0A` | REMOTE_CONTROL_FEATURE_PROPERTIES_RELEASE4 | — | — | auto | ◐ |
-| `A1‑0B` | REMOTE_CONTROL_STATIC_FEATURE_PROPERTIES | — | — | auto | ◐ |
+| `A1‑0B` | REMOTE_CONTROL_STATIC_FEATURE_PROPERTIES | Feature bitmap — bool per sub-field (see [schemas](#value-schemas-from-boschs-diagnostic-tool)) | bools | auto | ◐ |
 | `A1‑41` | AMBIENT_BRIGHTNESS | — | — | req | ◐ |
 | `A1‑51` | ACTIVE_ISSUE_VISUALIZATION_EVENT | — | — | auto | ◐ |
 | `A1‑62` | GEAR_CADENCE_LIMITS | — | — | auto | ◐ |
-| `A1‑65` | CURRENT_GEAR_CADENCE_SETPOINT | — | — | auto | ◐ |
+| `A1‑65` | CURRENT_GEAR_CADENCE_SETPOINT | eShift cadence setpoint | rpm | auto | ◐ |
 | `A1‑81` | LANGUAGE | — | text | auto | ✓ |
 | `A1‑82` | UNITS | — | — | auto | ◐ |
-| `A1‑83` | TIME_FORMAT | — | — | auto | ◐ |
+| `A1‑83` | TIME_FORMAT | Time format enum (0 = 24 h, 1 = 12 h) | enum | auto | ◐ |
 | `A1‑84` | BIKE_ID | — | — | req | ◐ |
 | `A1‑86` | BIKE_NAME | — | text | auto | ✓ |
 | `A1‑98` | MAXIMUM_BATTERIES_AVAILABLE_AT_SOME_POINT | — | — | req | ◐ |
@@ -396,7 +445,7 @@ request-only.
 | `8D‑1E` | HEAD_UNIT_FEATURE_PROPERTIES_RELEASE4 | — | — | auto | ◐ |
 | `8D‑1F` | UNLOCK_TOKENS_NONCE | Freshness/anti-replay nonce for unlock-token generation | — | auto | ◐ |
 | `8D‑22` | VIEW_STRIPE_CONFIGURATION | — | — | auto | ◐ |
-| `8D‑84` | HEAD_UNIT_STATIC_FEATURE_PROPERTIES | — | — | auto | ◐ |
+| `8D‑84` | HEAD_UNIT_STATIC_FEATURE_PROPERTIES | Feature bitmap — bool per sub-field (see [schemas](#value-schemas-from-boschs-diagnostic-tool)) | bools | auto | ◐ |
 | `8D‑85` | SUPPORTED_TILE_IDS | — | — | req | ◐ |
 | `8D‑8A` | SUPPORTED_TILE_SIZES | — | — | req | ◐ |
 | `8D‑15` | HEAD_UNIT_FEATURE_PROPERTIES_RELEASE1 | Head Unit Feature Properties Release1 | — | req | ◐ |
